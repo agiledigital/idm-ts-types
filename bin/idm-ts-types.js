@@ -21,7 +21,7 @@ function convertType(props, propName) {
       type = schemaType;
       break;
     case "array":
-      if (props.items.type == "relationship") {
+      if (props.items.type === "relationship") {
         type = `ReferenceType<${generateTypeName(
           filterResourceCollection(
             props.items.resourceCollection
@@ -40,11 +40,11 @@ function convertType(props, propName) {
       )}>`;
       break;
     default:
-      throw "Unsupported type [" +
+      throw new Error("Unsupported type [" +
         schemaType +
         "] for property [" +
         propName +
-        "]";
+        "]");
   }
   return type;
 }
@@ -53,9 +53,9 @@ function calcReturnByDefault(prop) {
   if (prop.returnByDefault) {
     return prop.returnByDefault;
   } else {
-    if (prop.type == "relationship") {
+    if (prop.type === "relationship") {
       return false;
-    } else if (prop.type == "array" && prop.items.type == "relationship") {
+    } else if (prop.type === "array" && prop.items.type === "relationship") {
       return false;
     } else {
       return true;

@@ -6,7 +6,10 @@
         "tslint-sonarts",
         "tslint-config-prettier"
     ],
-    "jsRules": {},
+    "jsRules": {
+        "object-literal-sort-keys": false,
+        "no-console": false
+    },
     "rules": {},
     "rulesDirectory": []
 }
