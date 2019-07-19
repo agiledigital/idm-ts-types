@@ -28,7 +28,7 @@ interface OpenIDM {
   ) => Result;
   patch: (
     resourceName: string,
-    rev: string,
+    rev: string | null,
     value: object,
     params?: object | null,
     fields?: string[]
@@ -40,14 +40,14 @@ interface OpenIDM {
   ) => Result | null;
   update: (
     resourceName: string,
-    rev: string,
+    rev: string | null,
     value: object,
     params?: object | null,
     fields?: string[]
   ) => Result;
   delete: (
     resourceName: string,
-    rev: string,
+    rev?: string | null,
     params?: object | null,
     fields?: string[]
   ) => Result;
@@ -59,7 +59,7 @@ interface OpenIDM {
   action: (
     resource: string,
     actionName: string,
-    content: object,
+    content?: object | null,
     params?: object | null,
     fields?: string[]
   ) => any;
