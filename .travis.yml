@@ -1,0 +1,7 @@
+language: node_js
+install:
+  - yarn install --frozen-lockfile
+script:
+  - yarn type-check
+  - yarn type-coverage --strict --detail
+  - yarn lint
