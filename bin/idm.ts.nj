@@ -1,5 +1,5 @@
 // Generated file
-import { idmObject, ReferenceType } from 'lib/idm-ts'
+import { idmObject, ReferenceType } from '@agiledigital/idm-ts-types/lib/idm-ts'
 
 {% for mo in managedObjects %}
 // {{ mo.name }}
