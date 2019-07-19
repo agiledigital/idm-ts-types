@@ -1,5 +1,3 @@
-import { Option, fromNullable } from 'fp-ts/lib/Option'
-
 interface IDMObjectType<T extends string> {
     _tag: T
 }
@@ -23,11 +21,11 @@ const assignType = (type: string) => (obj: unknown) => ({_tag: type, ...obj}) as
 export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<string>> {
     constructor(private readonly type: T['_tag']) { }
 
-    read<F extends Fields<T>>(id: string, options: {params?: object, fields: [F, ...F[]]}): Option<ResultType<T, D, F>>
-    read<F extends Fields<T>>(id: string, options: {params?: object}): Option<D>
-    read<F extends Fields<T>>(id: string): Option<D>
+    read<F extends Fields<T>>(id: string, options: {params?: object, fields: [F, ...F[]]}): ResultType<T, D, F>
+    read<F extends Fields<T>>(id: string, options: {params?: object}): D
+    read<F extends Fields<T>>(id: string): D
     read<F extends Fields<T>>(id: string, options: {params?: object, fields?: F[]} = {}) {
-        return fromNullable(openidm.read(`${this.type}/${id}`, options.params, options.fields)).map(assignType(this.type))
+        return openidm.read(`${this.type}/${id}`, options.params, options.fields).map(assignType(this.type))
     }
 
     create<F extends Fields<T>>(id: string, newResourceId: string, content: object, params: object | undefined, fields: F[]): ResultType<T, D, F>
