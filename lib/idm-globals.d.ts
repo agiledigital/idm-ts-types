@@ -23,32 +23,32 @@ interface OpenIDM {
     resourceName: string,
     newResourceId: string,
     content: object,
-    params?: object,
+    params?: object | null,
     fields?: string[]
   ) => Result;
   patch: (
     resourceName: string,
     rev: string,
     value: object,
-    params?: object,
+    params?: object | null,
     fields?: string[]
   ) => Result;
   read: (
     resourceName: string,
-    params?: object,
+    params?: object | null,
     fields?: string[]
   ) => Result | null;
   update: (
     resourceName: string,
     rev: string,
     value: object,
-    params?: object,
+    params?: object | null,
     fields?: string[]
   ) => Result;
   delete: (
     resourceName: string,
     rev: string,
-    params?: object,
+    params?: object | null,
     fields?: string[]
   ) => Result;
   query: (
@@ -60,7 +60,7 @@ interface OpenIDM {
     resource: string,
     actionName: string,
     content: object,
-    params?: object,
+    params?: object | null,
     fields?: string[]
   ) => any;
   encrypt: (value: any, cipher: string, alias: string) => EncryptedValue;
@@ -110,7 +110,7 @@ interface Logger {
 interface IdentityServer {
   getProperty: (
     name: string,
-    defaultVal: string,
+    defaultVal?: string | null,
     substitute?: boolean
   ) => string;
   getInstallLocation: () => string;
