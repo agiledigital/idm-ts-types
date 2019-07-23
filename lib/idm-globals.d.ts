@@ -21,7 +21,7 @@ type HashAlgorithm =
 interface OpenIDM {
   create: (
     resourceName: string,
-    newResourceId: string,
+    newResourceId: string | null,
     content: object,
     params?: object | null,
     fields?: string[]
