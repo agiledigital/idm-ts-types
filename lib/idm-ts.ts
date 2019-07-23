@@ -21,25 +21,25 @@ const assignType = (type: string) => (obj: unknown) => ({_tag: type, ...obj})
 export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<string>> {
     constructor(private readonly type: T['_tag']) { }
 
-    public read<F extends Fields<T>>(id: string, options: {readonly params?: object, readonly fields: [F, ...F[]]}): ResultType<T, D, F>
+    public read<F extends Fields<T>>(id: string, options: {readonly params?: object, readonly fields: [F, ...F[]]}): ResultType<T, F>
     public read<F extends Fields<T>>(id: string, options?: {readonly params?: object}): D
     public read<F extends Fields<T>>(id: string, {params, fields}: {readonly params?: object, readonly fields?: F[]} = {}) {
         return openidm.read(`${this.type}/${id}`, params, fields).map(assignType(this.type))
     }
 
-    public create<F extends Fields<T>>(newResourceId: string | null, content: object, params: object | undefined, fields: F[]): ResultType<T, D, F>
+    public create<F extends Fields<T>>(newResourceId: string | null, content: object, params: object | undefined, fields: F[]): ResultType<T, F>
     public create<F extends Fields<T>>(newResourceId: string | null, content: object, params?: object): D
     public create<F extends Fields<T>>(newResourceId: string | null, content: object, params?: object, fields?: F[]) {
         return assignType(this.type)(openidm.create(this.type, newResourceId, content, params, fields))
     }
 
-    public patch<F extends Fields<T>>(id: string, rev: string, value: object, params: object | undefined, fields: F[]): ResultType<T, D, F>
+    public patch<F extends Fields<T>>(id: string, rev: string, value: object, params: object | undefined, fields: F[]): ResultType<T, F>
     public patch<F extends Fields<T>>(id: string, rev: string, value: object, params?: object): D
     public patch<F extends Fields<T>>(id: string, rev: string, value: object, params?: object, fields?: F[]) {
         return assignType(this.type)(openidm.patch(`${this.type}/${id}`, rev, value, params, fields))
     }
 
-    public update<F extends Fields<T>>(id: string, rev: string, value: object, params: object | undefined, fields?: F[]): ResultType<T, D, F>
+    public update<F extends Fields<T>>(id: string, rev: string, value: object, params: object | undefined, fields?: F[]): ResultType<T, F>
     public update<F extends Fields<T>>(id: string, rev: string, value: object, params?: object): D
     public update<F extends Fields<T>>(id: string, rev: string, value: object, params?: object, fields?: F[]) {
         return assignType(this.type)(openidm.update(`${this.type}/${id}`, rev, value, params, fields))
