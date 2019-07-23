@@ -63,8 +63,18 @@ function calcReturnByDefault(prop) {
   }
 }
 
+function compareName( a, b ) {
+  if ( a.name < b.name ){
+    return -1;
+  }
+  if ( a.name > b.name ){
+    return 1;
+  }
+  return 0;
+}
+
 function generateIdmTsTypes() {
-  var managedObjectsFile =
+  const managedObjectsFile =
     process.env.IDM_MANAGED_OBJECTS || "./conf/managed.json";
   var managedObjects;
   try {
@@ -77,7 +87,7 @@ function generateIdmTsTypes() {
     newErr.stack += "\nCaused by: " + err.stack;
     throw newErr;
   }
-  var idmTypes = managedObjects.objects.map(mo => ({
+  const idmTypes = managedObjects.objects.sort(compareName).map(mo => ({
     name: mo.name,
     type: mo.schema.type,
     tsType: generateTypeName(mo.name),
@@ -93,10 +103,10 @@ function generateIdmTsTypes() {
   }));
 
   const nunjucks = require("nunjucks");
-  var template = nunjucks.render(path.resolve(__dirname, "idm.ts.nj"), {
+  const template = nunjucks.render(path.resolve(__dirname, "idm.ts.nj"), {
     managedObjects: idmTypes
   });
-  var idmTypesFile = process.env.IDM_TS_TYPES || "src/idm.ts";
+  const idmTypesFile = process.env.IDM_TS_TYPES || "src/idm.ts";
   fs.writeFile(idmTypesFile, template, err => {
     if (err) {
       throw err;
