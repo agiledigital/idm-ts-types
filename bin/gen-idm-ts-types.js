@@ -3,13 +3,50 @@
 const path = require("path");
 const camelCase = require("camelcase");
 const fs = require("fs");
-const generateTypeName = managedObjectName =>
+const glob = require("glob");
+const _ = require("lodash/fp");
+const generateManagedTypeName = managedObjectName =>
   "Managed" + camelCase(managedObjectName, { pascalCase: true });
+const generateSystemTypeName = (connectorName, typeName) =>
+  "System" +
+  camelCase(connectorName, { pascalCase: true }) +
+  camelCase(typeName, { pascalCase: true });
+const generateSystemObjName = (connectorName, typeName) =>
+  camelCase(connectorName) + camelCase(typeName, { pascalCase: true });
 
 const filterResourceCollection = resourceCollection =>
   resourceCollection.filter(res => res.path.startsWith("managed/"));
 
-function convertType(props, propName) {
+const provisionerRegex = /\.*\/provisioner.openicf-(.*)\.json.*/;
+
+function convertSystemType(props, propName) {
+  var type;
+  var schemaType = props.type;
+
+  switch (schemaType) {
+    case "boolean":
+    case "number":
+    case "object":
+    case "string":
+      type = schemaType;
+      break;
+    case "array":
+      if (props.items && props.items.type) {
+        const childType = convertSystemType(props.items, propName);
+        type = `${childType}[]`;
+      } else {
+        type = "any[]";
+      }
+      break;
+    default:
+      throw new Error(
+        "Unsupported type [" + schemaType + "] for property [" + propName + "]"
+      );
+  }
+  return type;
+}
+
+function convertManagedType(props, propName) {
   var type;
   var schemaType = props.type;
   if (Array.isArray(schemaType)) {
@@ -24,7 +61,7 @@ function convertType(props, propName) {
       break;
     case "array":
       if (props.items.type === "relationship") {
-        type = `ReferenceType<${generateTypeName(
+        type = `ReferenceType<${generateManagedTypeName(
           filterResourceCollection(
             props.items.resourceCollection
           )[0].path.replace("managed/", "")
@@ -34,7 +71,7 @@ function convertType(props, propName) {
       }
       break;
     case "relationship":
-      type = `ReferenceType<${generateTypeName(
+      type = `ReferenceType<${generateManagedTypeName(
         filterResourceCollection(props.resourceCollection)[0].path.replace(
           "managed/",
           ""
@@ -42,11 +79,9 @@ function convertType(props, propName) {
       )}>`;
       break;
     default:
-      throw new Error("Unsupported type [" +
-        schemaType +
-        "] for property [" +
-        propName +
-        "]");
+      throw new Error(
+        "Unsupported type [" + schemaType + "] for property [" + propName + "]"
+      );
   }
   return type;
 }
@@ -65,19 +100,60 @@ function calcReturnByDefault(prop) {
   }
 }
 
-function compareName( a, b ) {
-  if ( a.name < b.name ){
+function compareName(a, b) {
+  if (a.name < b.name) {
     return -1;
   }
-  if ( a.name > b.name ){
+  if (a.name > b.name) {
     return 1;
   }
   return 0;
 }
 
-function generateIdmTsTypes() {
-  const managedObjectsFile =
-    process.env.IDM_MANAGED_OBJECTS || "./conf/managed.json";
+function generateConnectorTypes(idmConfigDir) {
+  const connectorFiles = glob.sync(
+    idmConfigDir + "/provisioner.openicf-*.json"
+  );
+
+  return connectorFiles.map(conn => {
+    var connectorObject;
+    try {
+      // Resolve the path preferring the current working directory
+      connectorObject = require(path.resolve(conn));
+    } catch (err) {
+      var newErr = Error("Failed to load connector file [" + conn + "]");
+      newErr.stack += "\nCaused by: " + err.stack;
+      throw newErr;
+    }
+
+    const match = provisionerRegex.exec(conn);
+    if (!match) {
+      throw "Unable to determine system type name for: " + conn;
+    }
+    const systemTypeName = match[1];
+
+    return Object.keys(connectorObject.objectTypes).map(objName => {
+      const connObj = connectorObject.objectTypes[objName];
+      const tsType = generateSystemTypeName(systemTypeName, objName);
+      const sysObjName = generateSystemObjName(systemTypeName, objName);
+      return {
+        fullName: systemTypeName + "/" + objName,
+        name: sysObjName,
+        tsType: tsType,
+        properties: Object.keys(connObj.properties).map(propName => {
+          const value = connObj.properties[propName];
+          return {
+            name: propName,
+            type: convertSystemType(value, propName)
+          };
+        })
+      };
+    });
+  });
+}
+
+function generateManagedTypes(idmConfigDir) {
+  const managedObjectsFile = idmConfigDir + "/managed.json";
   var managedObjects;
   try {
     // Resolve the path preferring the current working directory
@@ -92,21 +168,31 @@ function generateIdmTsTypes() {
   const idmTypes = managedObjects.objects.sort(compareName).map(mo => ({
     name: mo.name,
     type: mo.schema.type,
-    tsType: generateTypeName(mo.name),
+    tsType: generateManagedTypeName(mo.name),
     properties: Object.keys(mo.schema.properties).map(propName => {
       const value = mo.schema.properties[propName];
       return {
         name: propName,
         returnByDefault: calcReturnByDefault(value),
-        type: convertType(value, propName),
+        type: convertManagedType(value, propName),
         required: mo.schema.required.includes(propName)
       };
     })
   }));
+  return idmTypes;
+}
+
+function generateIdmTsTypes() {
+  const idmConfigDir = process.env.IDM_CONFIG_DIR || "./conf";
+  const managedIdmTypes = generateManagedTypes(idmConfigDir);
+  const connectorIdmTypes = _.flatten(
+    generateConnectorTypes(idmConfigDir)
+  ).sort(compareName);
 
   const nunjucks = require("nunjucks");
   const template = nunjucks.render(path.resolve(__dirname, "idm.ts.nj"), {
-    managedObjects: idmTypes
+    managedObjects: managedIdmTypes,
+    connectorObjects: connectorIdmTypes
   });
   const idmTypesFile = process.env.IDM_TS_TYPES || "src/idm.ts";
   fs.writeFile(idmTypesFile, template, err => {

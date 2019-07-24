@@ -1,9 +1,13 @@
+export interface IDMBaseObject {
+    readonly _id?: string
+}
+
 interface IDMObjectType<T extends string> {
     readonly _tag: T
 }
 
 type Fields<T> = Exclude<keyof T, '_tag'> & string
-type ResultType<T extends IDMObjectType<string>, FieldTypes extends keyof T> = Pick<T, FieldTypes> & IDMObjectType<T['_tag']>
+type ResultType<T extends IDMObjectType<string>, FieldTypes extends keyof T> = Pick<T, FieldTypes> & IDMObjectType<Exclude<T['_tag'], undefined>>
 
 export type ReferenceType<T> = Partial<T> & {
     readonly _ref: string
@@ -18,7 +22,7 @@ export type ReferenceType<T> = Partial<T> & {
 const assignType = (type: string) => (obj: unknown) => ({_tag: type, ...obj})
 
 export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<string>> {
-    constructor(private readonly type: T['_tag']) { }
+    constructor(readonly type: Exclude<T['_tag'], undefined>) { }
 
     public read<F extends Fields<T>>(id: string, options: {readonly params?: object, readonly fields: [F, ...F[]]}): ResultType<T, F>
     public read<F extends Fields<T>>(id: string, options?: {readonly params?: object}): D
@@ -26,21 +30,21 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
         return openidm.read(`${this.type}/${id}`, params, fields).map(assignType(this.type))
     }
 
-    public create<F extends Fields<T>>(newResourceId: string | null, content: object, params: object | undefined, fields: F[]): ResultType<T, F>
-    public create<F extends Fields<T>>(newResourceId: string | null, content: object, params?: object): D
-    public create<F extends Fields<T>>(newResourceId: string | null, content: object, params?: object, fields?: F[]) {
+    public create<F extends Fields<T>>(newResourceId: string | null, content: T, params: object | undefined, fields: F[]): ResultType<T, F>
+    public create<F extends Fields<T>>(newResourceId: string | null, content: T, params?: object): D
+    public create<F extends Fields<T>>(newResourceId: string | null, content: T, params?: object, fields?: F[]) {
         return assignType(this.type)(openidm.create(this.type, newResourceId, content, params, fields))
     }
 
-    public patch<F extends Fields<T>>(id: string, rev: string, value: object, params: object | undefined, fields: F[]): ResultType<T, F>
-    public patch<F extends Fields<T>>(id: string, rev: string, value: object, params?: object): D
-    public patch<F extends Fields<T>>(id: string, rev: string, value: object, params?: object, fields?: F[]) {
+    public patch<F extends Fields<T>>(id: string, rev: string, value: PatchOpts, params: object | undefined, fields: F[]): ResultType<T, F>
+    public patch<F extends Fields<T>>(id: string, rev: string, value: PatchOpts, params?: object): D
+    public patch<F extends Fields<T>>(id: string, rev: string, value: PatchOpts, params?: object, fields?: F[]) {
         return assignType(this.type)(openidm.patch(`${this.type}/${id}`, rev, value, params, fields))
     }
 
-    public update<F extends Fields<T>>(id: string, rev: string, value: object, params: object | undefined, fields?: F[]): ResultType<T, F>
-    public update<F extends Fields<T>>(id: string, rev: string, value: object, params?: object): D
-    public update<F extends Fields<T>>(id: string, rev: string, value: object, params?: object, fields?: F[]) {
+    public update<F extends Fields<T>>(id: string, rev: string, value: T, params: object | undefined, fields?: F[]): ResultType<T, F>
+    public update<F extends Fields<T>>(id: string, rev: string, value: T, params?: object): D
+    public update<F extends Fields<T>>(id: string, rev: string, value: T, params?: object, fields?: F[]) {
         return assignType(this.type)(openidm.update(`${this.type}/${id}`, rev, value, params, fields))
     }
 
@@ -57,19 +61,17 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
         const result = response.result.map(assignType(this.type))
         return {...response, result}
     }
-}
 
-export const idmObject = <T extends IDMObjectType<string>, D extends IDMObjectType<string>>(type: T['_tag']) => new IDMObject<T, D>(type)
-
-// tslint:disable-next-line: max-classes-per-file
-export class IDMRelationship<T extends IDMObjectType<string>> {
-    constructor(private readonly type: T['_tag']) { }
-    
-    public create (managedObjectId: string)  {
+    /**
+     * Create a relationship object for the given managed object and id.
+     * 
+     * @param managedObjectId The managed object id to link to
+     */
+    public relationship (managedObjectId: string)  {
         return {
             _ref: this.type + "/" + managedObjectId
         }
     }
 }
 
-export const idmRelationship = <T extends IDMObjectType<string>>(type: T['_tag']) => new IDMRelationship<T>(type)
+export const idmObject = <T extends IDMObjectType<string>, D extends IDMObjectType<string>>(type: Exclude<T['_tag'], undefined>) => new IDMObject<T, D>(type)

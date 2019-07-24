@@ -1,14 +1,15 @@
 // Generated file
-import { idmObject, idmRelationship, ReferenceType } from '@agiledigital/idm-ts-types/lib/idm-ts'
+import { IDMBaseObject, idmObject, ReferenceType } from '@agiledigital/idm-ts-types/lib/idm-ts'
 
 {% for mo in managedObjects %}
 // {{ mo.name }}
 export type {{ mo.tsType }}Defaults = {
-    _tag: 'managed/{{ mo.name }}'
+    // tslint:disable-next-line: no-duplicate-string
+    _tag?: 'managed/{{ mo.name }}'
     {% for prop in mo.properties | selectattr('returnByDefault') -%}
     {{ prop.name }}{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
     {% endfor %}
-}
+} & IDMBaseObject
 
 export type {{ mo.tsType }}NonDefaults = {
     {% for prop in mo.properties | rejectattr('returnByDefault') -%}
@@ -20,6 +21,18 @@ export type {{ mo.tsType }} = {{ mo.tsType }}Defaults & {{ mo.tsType }}NonDefaul
 
 {% endfor %}
 
+{% for co in connectorObjects %}
+// {{ co.fullName }}
+export type {{ co.tsType }} = {
+    // tslint:disable-next-line: no-duplicate-string
+    _tag?: 'system/{{ co.name }}'
+    {% for prop in co.properties -%}
+    {{ prop.name }}?: {{ prop.type | safe }}
+    {% endfor %}
+} & IDMBaseObject
+
+{% endfor %}
+
 export const idm = {
     ...openidm,
     managed: {
@@ -27,9 +40,9 @@ export const idm = {
         {{ mo.name }}: idmObject<{{ mo.tsType }}, {{ mo.tsType }}Defaults>('managed/{{ mo.name }}'){% if not loop.last %},{% endif %}
         {% endfor %}
     },
-    relationship: {
-        {% for mo in managedObjects -%}
-        {{ mo.name }}: idmRelationship<{{ mo.tsType }}>('managed/{{ mo.name }}'){% if not loop.last %},{% endif %}
+    system: {
+        {% for co in connectorObjects -%}
+        {{ co.name }}: idmObject<{{ co.tsType }}, {{ co.tsType }}>('system/{{ co.fullName }}'){% if not loop.last %},{% endif %}
         {% endfor %}
     }
 }

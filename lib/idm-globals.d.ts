@@ -18,6 +18,18 @@ type HashAlgorithm =
   | "Scrypt"
   | "PBKDF2";
 
+type PatchOperation =
+  | "add"
+  | "remove"
+  | "replace"
+  | "increment"
+
+type PatchOpts = {
+  operation: PatchOperation
+  field: string
+  value: object
+}
+
 interface OpenIDM {
   create: (
     resourceName: string,
@@ -29,7 +41,7 @@ interface OpenIDM {
   patch: (
     resourceName: string,
     rev: string | null,
-    value: object,
+    value: PatchOpts,
     params?: object | null,
     fields?: string[]
   ) => Result;
