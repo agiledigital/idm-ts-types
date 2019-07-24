@@ -7,14 +7,13 @@ type ResultType<T extends IDMObjectType<string>, FieldTypes extends keyof T> = P
 
 export type ReferenceType<T> = Partial<T> & {
     readonly _ref: string
-    readonly _refResourceCollection: string,
-    readonly _refResourceId: string,
-    readonly _refProperties: {
+    readonly _refResourceCollection?: string
+    readonly _refResourceId?: string
+    readonly _refProperties?: {
         readonly _id: string
         readonly _rev: string
-    },
+    }
 }
-
 
 const assignType = (type: string) => (obj: unknown) => ({_tag: type, ...obj})
 
