@@ -16,6 +16,8 @@ function convertType(props, propName) {
     schemaType = schemaType[0];
   }
   switch (schemaType) {
+    case "boolean":
+    case "number":
     case "object":
     case "string":
       type = schemaType;
