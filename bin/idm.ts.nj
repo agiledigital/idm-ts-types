@@ -26,6 +26,11 @@ export const idm = {
         {% for mo in managedObjects -%}
         {{ mo.name }}: idmObject<{{ mo.tsType }}, {{ mo.tsType }}Defaults>('managed/{{ mo.name }}'){% if not loop.last %},{% endif %}
         {% endfor %}
+    },
+    relationship: {
+        {% for mo in managedObjects -%}
+        {{ mo.name }}: idmRelationship<{{ mo.tsType }}>('managed/{{ mo.name }}'){% if not loop.last %},{% endif %}
+        {% endfor %}
     }
 }
 

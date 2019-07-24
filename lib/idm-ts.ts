@@ -60,3 +60,16 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
 }
 
 export const idmObject = <T extends IDMObjectType<string>, D extends IDMObjectType<string>>(type: T['_tag']) => new IDMObject<T, D>(type)
+
+// tslint:disable-next-line: max-classes-per-file
+export class IDMRelationship<T extends IDMObjectType<string>> {
+    constructor(private readonly type: T['_tag']) { }
+    
+    public create (managedObjectId: string)  {
+        return {
+            _ref: this.type + "/" + managedObjectId
+        }
+    }
+}
+
+export const idmRelationship = <T extends IDMObjectType<string>>(type: T['_tag']) => new IDMRelationship<T>(type)
