@@ -3,7 +3,7 @@ export interface IDMBaseObject {
 }
 
 interface IDMObjectType<T extends string> {
-    readonly _tag: T
+    readonly _tag?: T
 }
 
 type Fields<T> = Exclude<keyof T, '_tag'> & string

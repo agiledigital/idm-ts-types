@@ -25,7 +25,7 @@ export type {{ mo.tsType }} = {{ mo.tsType }}Defaults & {{ mo.tsType }}NonDefaul
 // {{ co.fullName }}
 export type {{ co.tsType }} = {
     // tslint:disable-next-line: no-duplicate-string
-    _tag?: 'system/{{ co.name }}'
+    _tag?: 'system/{{ co.fullName }}'
     {% for prop in co.properties -%}
     {{ prop.name }}?: {{ prop.type | safe }}
     {% endfor %}
