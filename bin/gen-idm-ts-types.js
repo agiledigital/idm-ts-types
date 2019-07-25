@@ -5,6 +5,8 @@ const camelCase = require("camelcase");
 const fs = require("fs");
 const glob = require("glob");
 const _ = require("lodash/fp");
+const prettier = require("prettier");
+
 const generateManagedTypeName = managedObjectName =>
   "Managed" + camelCase(managedObjectName, { pascalCase: true });
 const generateSystemTypeName = (connectorName, typeName) =>
@@ -180,8 +182,7 @@ function generateManagedTypes(idmConfigDir) {
       // We don't want the description if it's the same as the title.
       if (title == value.description) {
         description = "";
-      }
-      else {
+      } else {
         description = value.description;
       }
       return {
@@ -209,8 +210,9 @@ function generateIdmTsTypes() {
     managedObjects: managedIdmTypes,
     connectorObjects: connectorIdmTypes
   });
-  const idmTypesFile = process.env.IDM_TS_TYPES || "src/idm.ts";
-  fs.writeFile(idmTypesFile, template, err => {
+  const formatted = prettier.format(template, { parser: "typescript" });
+  const idmTypesFile = process.env.IDM_TS_TYPES || "lib/idm.ts";
+  fs.writeFile(idmTypesFile, formatted, err => {
     if (err) {
       throw err;
     } else {
