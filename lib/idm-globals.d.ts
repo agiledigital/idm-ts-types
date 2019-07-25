@@ -5,7 +5,11 @@ declare const openidm: OpenIDM;
 // Allows referencing of org.* Java classes ie org.forgerock
 declare const org: any;
 
-type Result = any;
+interface IDMBaseObject {
+  readonly _id?: string
+}
+
+type Result = IDMBaseObject & Record<string, any>;
 
 interface EncryptedValue {}
 interface HashedValue {}

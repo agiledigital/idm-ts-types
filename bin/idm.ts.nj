@@ -1,18 +1,28 @@
 // Generated file
-import { IDMBaseObject, idmObject, ReferenceType } from '@agiledigital/idm-ts-types/lib/idm-ts'
+import { idmObject, ReferenceType } from '@agiledigital/idm-ts-types/lib/idm-ts'
 
 {% for mo in managedObjects %}
 // {{ mo.name }}
 export type {{ mo.tsType }}Defaults = {
     // tslint:disable-next-line: no-duplicate-string
     _tag?: 'managed/{{ mo.name }}'
-    {% for prop in mo.properties | selectattr('returnByDefault') -%}
+    {% for prop in mo.properties | selectattr('returnByDefault') -%}{% if prop.title %}
+    /**
+     * {{ prop.title }}{% if prop.description %}     
+     *
+     * {{ prop.description }}{% endif %}
+     */{% endif %}
     {{ prop.name }}{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
     {% endfor %}
 } & IDMBaseObject
 
 export type {{ mo.tsType }}NonDefaults = {
-    {% for prop in mo.properties | rejectattr('returnByDefault') -%}
+    {% for prop in mo.properties | rejectattr('returnByDefault') -%}{% if prop.title %}
+    /**
+     * {{ prop.title }}{% if prop.description %}     
+     *
+     * {{ prop.description }}{% endif %}
+     */{% endif %}
     {{ prop.name }}{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
     {% endfor %}
 }

@@ -171,11 +171,26 @@ function generateManagedTypes(idmConfigDir) {
     tsType: generateManagedTypeName(mo.name),
     properties: Object.keys(mo.schema.properties).map(propName => {
       const value = mo.schema.properties[propName];
+      var title = value.title;
+      if (!title && value.description) {
+        title = value.description;
+      }
+      var description;
+
+      // We don't want the description if it's the same as the title.
+      if (title == value.description) {
+        description = "";
+      }
+      else {
+        description = value.description;
+      }
       return {
         name: propName,
         returnByDefault: calcReturnByDefault(value),
         type: convertManagedType(value, propName),
-        required: mo.schema.required.includes(propName)
+        required: mo.schema.required.includes(propName),
+        title: title,
+        description: description
       };
     })
   }));
