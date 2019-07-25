@@ -2,14 +2,16 @@ declare const identityServer: IdentityServer;
 
 declare const logger: Logger;
 declare const openidm: OpenIDM;
-// Allows referencing of org.* Java classes ie org.forgerock
-declare const org: any;
 
 interface IDMBaseObject {
-  readonly _id?: string
+  readonly _id: string
 }
 
-type Result = IDMBaseObject & Record<string, any>;
+type Revision = {
+  readonly _rev: string
+}
+
+type Result = IDMBaseObject & Revision & Record<string, any>;
 
 interface EncryptedValue {}
 interface HashedValue {}
@@ -31,7 +33,7 @@ type PatchOperation =
 type PatchOpts = {
   operation: PatchOperation
   field: string
-  value: object
+  value: any
 }
 
 interface OpenIDM {
@@ -45,7 +47,7 @@ interface OpenIDM {
   patch: (
     resourceName: string,
     rev: string | null,
-    value: PatchOpts,
+    value: PatchOpts[],
     params?: object | null,
     fields?: string[]
   ) => Result;

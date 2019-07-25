@@ -130,7 +130,7 @@ function generateConnectorTypes(idmConfigDir) {
 
     const match = provisionerRegex.exec(conn);
     if (!match) {
-      throw "Unable to determine system type name for: " + conn;
+      throw Error("Unable to determine system type name for: " + conn);
     }
     const systemTypeName = match[1];
 
@@ -180,7 +180,7 @@ function generateManagedTypes(idmConfigDir) {
       var description;
 
       // We don't want the description if it's the same as the title.
-      if (title == value.description) {
+      if (title === value.description) {
         description = "";
       } else {
         description = value.description;
