@@ -6,6 +6,8 @@ const fs = require("fs");
 const glob = require("glob");
 const _ = require("lodash/fp");
 const prettier = require("prettier");
+const config = require('config');
+const nunjucks = require("nunjucks");
 
 const generateManagedTypeName = managedObjectName =>
   "Managed" + camelCase(managedObjectName, { pascalCase: true });
@@ -199,26 +201,31 @@ function generateManagedTypes(idmConfigDir) {
 }
 
 function generateIdmTsTypes() {
-  const idmConfigDir = process.env.IDM_CONFIG_DIR || "./conf";
-  const managedIdmTypes = generateManagedTypes(idmConfigDir);
+  const idmTsCodeGen = config.get('idmTsCodeGen');
+
+  const managedIdmTypes = generateManagedTypes(idmTsCodeGen.idmProjectConfigDir);
   const connectorIdmTypes = _.flatten(
-    generateConnectorTypes(idmConfigDir)
+    generateConnectorTypes(idmTsCodeGen.idmProjectConfigDir)
   ).sort(compareName);
 
-  const nunjucks = require("nunjucks");
   const template = nunjucks.render(path.resolve(__dirname, "idm.ts.nj"), {
     managedObjects: managedIdmTypes,
     connectorObjects: connectorIdmTypes
   });
-  const formatted = prettier.format(template, { parser: "typescript" });
-  const idmTypesFile = process.env.IDM_TS_TYPES || "lib/idm.ts";
-  fs.writeFile(idmTypesFile, formatted, err => {
-    if (err) {
-      throw err;
-    } else {
-      console.log("Wrote typescript types to [" + idmTypesFile + "]");
-    }
-  });
+
+  // Load the prettier config
+  prettier.resolveConfig(process.cwd()).then(options => {
+    // Prettify the generated IDM TS tpes
+    const formatted = prettier.format(template, { ...options, parser: "typescript" });
+  
+    fs.writeFile(idmTsCodeGen.idmTsTypesOutputFile, formatted, err => {
+      if (err) {
+        throw err;
+      } else {
+        console.log("Wrote typescript types to [" + idmTsCodeGen.idmTsTypesOutputFile + "]");
+      }
+    });
+  })
 }
 
 generateIdmTsTypes();
