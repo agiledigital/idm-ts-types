@@ -12,7 +12,7 @@ export type {{ mo.tsType }}Defaults = {
      *
      * {{ prop.description }}{% endif %}
      */{% endif %}
-    {{ prop.name }}{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
+    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
     {% endfor %}
 } & IDMBaseObject
 
@@ -23,7 +23,7 @@ export type {{ mo.tsType }}NonDefaults = {
      *
      * {{ prop.description }}{% endif %}
      */{% endif %}
-    {{ prop.name }}{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
+    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
     {% endfor %}
 }
 
@@ -37,7 +37,7 @@ export type {{ co.tsType }} = {
     // tslint:disable-next-line: no-duplicate-string
     _tag?: 'system/{{ co.fullName }}'
     {% for prop in co.properties -%}
-    {{ prop.name }}?: {{ prop.type | safe }}
+    '{{ prop.name }}'?: {{ prop.type | safe }}
     {% endfor %}
 } & IDMBaseObject
 
