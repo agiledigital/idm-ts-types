@@ -31,6 +31,23 @@ export type {{ mo.tsType }} = {{ mo.tsType }}Defaults & {{ mo.tsType }}NonDefaul
 
 {% endfor %}
 
+{% for mo in subManagedTypes %}
+// {{ mo.name }}
+export type {{ mo.tsType }} = {
+    // tslint:disable-next-line: no-duplicate-string
+    _tag?: 'managed/{{ mo.name }}'
+    {% for prop in mo.properties -%}{% if prop.title %}
+    /**
+     * {{ prop.title }}{% if prop.description %}     
+     *
+     * {{ prop.description }}{% endif %}
+     */{% endif %}
+    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
+    {% endfor %}
+}
+
+{% endfor %}
+
 {% for co in connectorObjects %}
 // {{ co.fullName }}
 export type {{ co.tsType }} = {
