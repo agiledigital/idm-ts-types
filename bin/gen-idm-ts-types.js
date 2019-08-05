@@ -209,7 +209,6 @@ function generateManagedTypes(idmConfigDir, subManagedTypes) {
     }
   });
 
-  console.log(JSON.stringify(subManagedTypes,null,2));
   return idmTypes;
 }
 
