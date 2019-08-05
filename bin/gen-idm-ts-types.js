@@ -25,6 +25,7 @@ const filterResourceCollection = resourceCollection =>
 
 const provisionerRegex = /\.*\/provisioner.openicf-(.*)\.json.*/;
 
+// TODO: Support nested types like managed objects
 function convertSystemType(props, propName) {
   var type;
   var schemaType = props.type;
@@ -217,8 +218,8 @@ function generateManagedSubType(subType, moName, managedObjectBaseName, propName
   subManagedTypes.push({
     name: moName,
     tsType: managedTypeName,
-    properties: Object.keys(subType.properties).map(propName => {
-      const value = subType.properties[propName];
+    properties: Object.keys(subType.properties).map(propertyName => {
+      const value = subType.properties[propertyName];
       var title = value.title;
       if (!title && value.description) {
         title = value.description;
@@ -232,9 +233,9 @@ function generateManagedSubType(subType, moName, managedObjectBaseName, propName
         description = value.description;
       }
       return {
-        name: propName,
-        type: convertManagedType(value, propName, moName, managedTypeName, subManagedTypes),
-        required: Array.isArray(subType.required)? subType.required.includes(propName) : false,
+        name: propertyName,
+        type: convertManagedType(value, propertyName, moName, managedTypeName, subManagedTypes),
+        required: Array.isArray(subType.required)? subType.required.includes(propertyName) : false,
         title: title,
         description: description
       };
