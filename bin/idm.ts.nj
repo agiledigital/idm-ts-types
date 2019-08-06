@@ -2,7 +2,11 @@
 import { idmObject, ReferenceType } from '@agiledigital/idm-ts-types/lib/idm-ts'
 
 {% for mo in managedObjects %}
-// {{ mo.name }}
+/**
+ * {{ mo.name }} Managed Object Default fields
+ * 
+ * These fields are returned when '*' is used or no fields are specified.
+ */
 export type {{ mo.tsType }}Defaults = {
     // tslint:disable-next-line: no-duplicate-string
     _tag?: 'managed/{{ mo.name }}'
@@ -16,6 +20,11 @@ export type {{ mo.tsType }}Defaults = {
     {% endfor %}
 } & IDMBaseObject
 
+/**
+ * {{ mo.name }} Managed Object Non Default fields
+ * 
+ * These fields are only returned when explicitly mentioned or in the relationship case '*_ref' is used.
+ */
 export type {{ mo.tsType }}NonDefaults = {
     {% for prop in mo.properties | rejectattr('returnByDefault') -%}{% if prop.title %}
     /**
@@ -27,12 +36,17 @@ export type {{ mo.tsType }}NonDefaults = {
     {% endfor %}
 }
 
+/**
+ * {{ mo.name }} Managed Object
+ */
 export type {{ mo.tsType }} = {{ mo.tsType }}Defaults & {{ mo.tsType }}NonDefaults
 
 {% endfor %}
 
 {% for mo in subManagedTypes %}
-// {{ mo.name }}
+/**
+ * {{ mo.name }} Sub Type of {@link {{ mo.parentTsType }}}
+ */
 export type {{ mo.tsType }} = {
     // tslint:disable-next-line: no-duplicate-string
     _tag?: 'managed/{{ mo.name }}'
@@ -49,7 +63,9 @@ export type {{ mo.tsType }} = {
 {% endfor %}
 
 {% for co in connectorObjects %}
-// {{ co.fullName }}
+/**
+ * {{ co.fullName }} Connector Object Type for {{ co.connectorName }} connector
+ */
 export type {{ co.tsType }} = {
     // tslint:disable-next-line: no-duplicate-string
     _tag?: 'system/{{ co.fullName }}'

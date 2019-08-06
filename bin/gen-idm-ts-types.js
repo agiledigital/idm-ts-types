@@ -153,6 +153,7 @@ function generateConnectorTypes(idmConfigDir) {
         fullName: systemTypeName + "/" + objName,
         name: sysObjName,
         tsType: tsType,
+        connectorName: systemTypeName,
         properties: Object.keys(connObj.properties).map(propName => {
           const value = connObj.properties[propName];
           return {
@@ -201,7 +202,7 @@ function generateManagedTypes(idmConfigDir, subManagedTypes) {
         return {
           name: propName,
           returnByDefault: calcReturnByDefault(value),
-          type: convertManagedType(value, propName, mo.name, "Sub" + managedTypeName, subManagedTypes),
+          type: convertManagedType(value, propName, mo.name, managedTypeName, subManagedTypes),
           required: mo.schema.required.includes(propName),
           title: title,
           description: description
@@ -214,10 +215,13 @@ function generateManagedTypes(idmConfigDir, subManagedTypes) {
 }
 
 function generateManagedSubType(subType, moName, managedObjectBaseName, propName, subManagedTypes) {
-  const managedTypeName = generateManagedSubTypeName(managedObjectBaseName, propName);
+  // Don't add Sub to the start of the name if it already starts with Sub
+  const subName = managedObjectBaseName.startsWith("Sub") ? managedObjectBaseName: "Sub" + managedObjectBaseName;
+  const managedTypeName = generateManagedSubTypeName(subName, propName);
   subManagedTypes.push({
     name: moName,
     tsType: managedTypeName,
+    parentTsType: managedObjectBaseName,
     properties: Object.keys(subType.properties).map(propertyName => {
       const value = subType.properties[propertyName];
       var title = value.title;

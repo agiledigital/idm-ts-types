@@ -9,6 +9,9 @@
         "object-literal-sort-keys": false,
         "no-console": false
     },
-    "rules": {},
+    "rules": {
+        "interface-over-type-literal": false,
+        "array-type": false
+    },
     "rulesDirectory": []
 }
