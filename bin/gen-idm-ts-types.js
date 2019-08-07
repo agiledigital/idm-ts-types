@@ -72,7 +72,7 @@ function convertManagedType(props, propName, moName, tsTypeName, subManagedTypes
           type = generateManagedSubType(props, moName + '/' + propName, tsTypeName, propName, subManagedTypes)
         }
         else {
-          type = "any";
+          type = "Record<string, any>";
         }
         break;
     case "array":
