@@ -14,10 +14,13 @@ function coalesce() {
   for (var i = 0; i < len; i++) {
     if (arguments[i] !== null && arguments[i] !== undefined) {
       // convert boolean strings to actual booleans
-      if (arguments[i] === "true") return true;
-      if (arguments[i] === "false") return false;
-
-      return arguments[i];
+      if (arguments[i] === "true") {
+        return true;
+      } else if (arguments[i] === "false") {
+        return false;
+      } else {
+        return arguments[i];
+      }
     }
   }
   return null;
