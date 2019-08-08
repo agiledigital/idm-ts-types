@@ -9,6 +9,24 @@ const prettier = require("prettier");
 const config = require('config');
 const nunjucks = require("nunjucks");
 
+function coalesce() {
+  var len = arguments.length;
+  for (var i=0; i<len; i++) {
+      if (arguments[i] !== null && arguments[i] !== undefined) {
+          // convert boolean strings to actual booleans
+          if (arguments[i] === "true") return true;
+          if (arguments[i] === "false") return false;
+
+          return arguments[i];
+      }
+  }
+  return null;
+}
+
+const idmTsCodeGen = config.get('idmTsCodeGen');
+const managedObjectValueType = coalesce(idmTsCodeGen.useUnknownInsteadOfAnyForManagedObj,idmTsCodeGen.useUnknownInsteadOfAny, false) ? "unknown" : "any";
+const connectorObjectValueType = coalesce(idmTsCodeGen.useUnknownInsteadOfAnyForConnectorObj,idmTsCodeGen.useUnknownInsteadOfAny, false) ? "unknown" : "any";
+
 const generateManagedTypeName = managedObjectName =>
   "Managed" + camelCase(managedObjectName, { pascalCase: true });
 const generateSystemTypeName = (connectorName, typeName) =>
@@ -37,14 +55,14 @@ function convertSystemType(props, propName) {
       type = schemaType;
       break;
     case "object":
-      type = "any";
+      type = `Record<string, ${connectorObjectValueType}>`;
       break;
     case "array":
       if (props.items && props.items.type) {
         const childType = convertSystemType(props.items, propName);
         type = `${childType}[]`;
       } else {
-        type = "any[]";
+        type = `${connectorObjectValueType}[]`;
       }
       break;
     default:
@@ -72,7 +90,7 @@ function convertManagedType(props, propName, moName, tsTypeName, subManagedTypes
           type = generateManagedSubType(props, moName + '/' + propName, tsTypeName, propName, subManagedTypes)
         }
         else {
-          type = "Record<string, any>";
+          type = `Record<string, ${managedObjectValueType}>`;
         }
         break;
     case "array":
@@ -80,7 +98,7 @@ function convertManagedType(props, propName, moName, tsTypeName, subManagedTypes
         type = convertManagedType(props.items, propName, moName, tsTypeName, subManagedTypes) + "[]";
       }
       else {
-        type = "any[]";
+        type = `${managedObjectValueType}[]`;
       }
       break;
     case "relationship":
@@ -250,7 +268,6 @@ function generateManagedSubType(subType, moName, managedObjectBaseName, propName
 }
 
 function generateIdmTsTypes() {
-  const idmTsCodeGen = config.get('idmTsCodeGen');
 
   var subManagedTypes = []
   const managedIdmTypes = generateManagedTypes(idmTsCodeGen.idmProjectConfigDir, subManagedTypes);
