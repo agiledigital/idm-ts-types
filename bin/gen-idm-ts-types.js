@@ -6,40 +6,39 @@ const fs = require("fs");
 const glob = require("glob");
 const _ = require("lodash/fp");
 const prettier = require("prettier");
-const config = require('config');
+const config = require("config");
 const nunjucks = require("nunjucks");
 
 function coalesce() {
   var len = arguments.length;
-  for (var i=0; i<len; i++) {
-      if (arguments[i] !== null && arguments[i] !== undefined) {
-          // convert boolean strings to actual booleans
-          if (arguments[i] === "true") return true;
-          if (arguments[i] === "false") return false;
+  for (var i = 0; i < len; i++) {
+    if (arguments[i] !== null && arguments[i] !== undefined) {
+      // convert boolean strings to actual booleans
+      if (arguments[i] === "true") return true;
+      if (arguments[i] === "false") return false;
 
-          return arguments[i];
-      }
+      return arguments[i];
+    }
   }
   return null;
 }
 
-const idmTsCodeGen = config.get('idmTsCodeGen');
-const managedObjectValueType = coalesce(idmTsCodeGen.useUnknownInsteadOfAnyForManagedObj,idmTsCodeGen.useUnknownInsteadOfAny, false) ? "unknown" : "any";
-const connectorObjectValueType = coalesce(idmTsCodeGen.useUnknownInsteadOfAnyForConnectorObj,idmTsCodeGen.useUnknownInsteadOfAny, false) ? "unknown" : "any";
+const idmTsCodeGen = config.get("idmTsCodeGen");
+const managedObjectValueType = coalesce(idmTsCodeGen.useUnknownInsteadOfAnyForManagedObj, idmTsCodeGen.useUnknownInsteadOfAny, false)
+  ? "unknown"
+  : "any";
+const connectorObjectValueType = coalesce(idmTsCodeGen.useUnknownInsteadOfAnyForConnectorObj, idmTsCodeGen.useUnknownInsteadOfAny, false)
+  ? "unknown"
+  : "any";
 
-const generateManagedTypeName = managedObjectName =>
-  "Managed" + camelCase(managedObjectName, { pascalCase: true });
+const generateManagedTypeName = managedObjectName => "Managed" + camelCase(managedObjectName, { pascalCase: true });
 const generateSystemTypeName = (connectorName, typeName) =>
-  "System" +
-  camelCase(connectorName, { pascalCase: true }) +
-  camelCase(typeName, { pascalCase: true });
-const generateSystemObjName = (connectorName, typeName) =>
-  camelCase(connectorName) + camelCase(typeName, { pascalCase: true });
+  "System" + camelCase(connectorName, { pascalCase: true }) + camelCase(typeName, { pascalCase: true });
+const generateSystemObjName = (connectorName, typeName) => camelCase(connectorName) + camelCase(typeName, { pascalCase: true });
 
 const generateManagedSubTypeName = (managedObjectBaseType, subType) => managedObjectBaseType + camelCase(subType, { pascalCase: true });
 
-const filterResourceCollection = resourceCollection =>
-  resourceCollection.filter(res => res.path.startsWith("managed/"));
+const filterResourceCollection = resourceCollection => resourceCollection.filter(res => res.path.startsWith("managed/"));
 
 const provisionerRegex = /\.*\/provisioner.openicf-(.*)\.json.*/;
 
@@ -66,9 +65,7 @@ function convertSystemType(props, propName) {
       }
       break;
     default:
-      throw new Error(
-        "Unsupported type [" + schemaType + "] for property [" + propName + "]"
-      );
+      throw new Error("Unsupported type [" + schemaType + "] for property [" + propName + "]");
   }
   return type;
 }
@@ -86,33 +83,24 @@ function convertManagedType(props, propName, moName, tsTypeName, subManagedTypes
       type = schemaType;
       break;
     case "object":
-        if (props.properties && Object.keys(props.properties).length > 0) {
-          type = generateManagedSubType(props, moName + '/' + propName, tsTypeName, propName, subManagedTypes)
-        }
-        else {
-          type = `Record<string, ${managedObjectValueType}>`;
-        }
-        break;
+      if (props.properties && Object.keys(props.properties).length > 0) {
+        type = generateManagedSubType(props, moName + "/" + propName, tsTypeName, propName, subManagedTypes);
+      } else {
+        type = `Record<string, ${managedObjectValueType}>`;
+      }
+      break;
     case "array":
       if (props.items && props.items.type) {
         type = convertManagedType(props.items, propName, moName, tsTypeName, subManagedTypes) + "[]";
-      }
-      else {
+      } else {
         type = `${managedObjectValueType}[]`;
       }
       break;
     case "relationship":
-      type = `ReferenceType<${generateManagedTypeName(
-        filterResourceCollection(props.resourceCollection)[0].path.replace(
-          "managed/",
-          ""
-        )
-      )}>`;
+      type = `ReferenceType<${generateManagedTypeName(filterResourceCollection(props.resourceCollection)[0].path.replace("managed/", ""))}>`;
       break;
     default:
-      throw new Error(
-        "Unsupported type [" + schemaType + "] for property [" + propName + "]"
-      );
+      throw new Error("Unsupported type [" + schemaType + "] for property [" + propName + "]");
   }
   return type;
 }
@@ -142,9 +130,7 @@ function compareName(a, b) {
 }
 
 function generateConnectorTypes(idmConfigDir) {
-  const connectorFiles = glob.sync(
-    idmConfigDir + "/provisioner.openicf-*.json"
-  );
+  const connectorFiles = glob.sync(idmConfigDir + "/provisioner.openicf-*.json");
 
   return connectorFiles.map(conn => {
     var connectorObject;
@@ -191,9 +177,7 @@ function generateManagedTypes(idmConfigDir, subManagedTypes) {
     // Resolve the path preferring the current working directory
     managedObjects = require(path.resolve(managedObjectsFile));
   } catch (err) {
-    var newErr = Error(
-      "Failed to load managed objects file [" + managedObjectsFile + "]"
-    );
+    var newErr = Error("Failed to load managed objects file [" + managedObjectsFile + "]");
     newErr.stack += "\nCaused by: " + err.stack;
     throw newErr;
   }
@@ -210,7 +194,7 @@ function generateManagedTypes(idmConfigDir, subManagedTypes) {
           title = value.description;
         }
         var description;
-  
+
         // We don't want the description if it's the same as the title.
         if (title === value.description) {
           description = "";
@@ -226,7 +210,7 @@ function generateManagedTypes(idmConfigDir, subManagedTypes) {
           description: description
         };
       })
-    }
+    };
   });
 
   return idmTypes;
@@ -234,7 +218,7 @@ function generateManagedTypes(idmConfigDir, subManagedTypes) {
 
 function generateManagedSubType(subType, moName, managedObjectBaseName, propName, subManagedTypes) {
   // Don't add Sub to the start of the name if it already starts with Sub
-  const subName = managedObjectBaseName.startsWith("Sub") ? managedObjectBaseName: "Sub" + managedObjectBaseName;
+  const subName = managedObjectBaseName.startsWith("Sub") ? managedObjectBaseName : "Sub" + managedObjectBaseName;
   const managedTypeName = generateManagedSubTypeName(subName, propName);
   subManagedTypes.push({
     name: moName,
@@ -257,25 +241,21 @@ function generateManagedSubType(subType, moName, managedObjectBaseName, propName
       return {
         name: propertyName,
         type: convertManagedType(value, propertyName, moName, managedTypeName, subManagedTypes),
-        required: Array.isArray(subType.required)? subType.required.includes(propertyName) : false,
+        required: Array.isArray(subType.required) ? subType.required.includes(propertyName) : false,
         title: title,
         description: description
       };
     })
   });
 
-  return managedTypeName
+  return managedTypeName;
 }
 
 function generateIdmTsTypes() {
-
-  var subManagedTypes = []
+  var subManagedTypes = [];
   const managedIdmTypes = generateManagedTypes(idmTsCodeGen.idmProjectConfigDir, subManagedTypes);
   subManagedTypes = subManagedTypes.sort(compareName);
-  const connectorIdmTypes = _.flatten(
-    generateConnectorTypes(idmTsCodeGen.idmProjectConfigDir)
-  ).sort(compareName);
-
+  const connectorIdmTypes = _.flatten(generateConnectorTypes(idmTsCodeGen.idmProjectConfigDir)).sort(compareName);
 
   const template = nunjucks.render(path.resolve(__dirname, "idm.ts.nj"), {
     managedObjects: managedIdmTypes,
@@ -287,7 +267,7 @@ function generateIdmTsTypes() {
   prettier.resolveConfig(process.cwd()).then(options => {
     // Prettify the generated IDM TS tpes
     const formatted = prettier.format(template, { ...options, parser: "typescript" });
-  
+
     fs.writeFile(idmTsCodeGen.idmTsTypesOutputFile, formatted, err => {
       if (err) {
         throw err;
@@ -295,7 +275,7 @@ function generateIdmTsTypes() {
         console.log("Wrote typescript types to [" + idmTsCodeGen.idmTsTypesOutputFile + "]");
       }
     });
-  })
+  });
 }
 
 generateIdmTsTypes();
