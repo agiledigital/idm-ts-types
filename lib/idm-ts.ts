@@ -22,40 +22,46 @@ export type ReferenceType<T> = Partial<T> & {
 export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<string>> {
     constructor(readonly type: Exclude<T['_tag'], undefined>) { }
 
-    public read<F extends Fields<T>>(id: string, options: {readonly params?: object, readonly fields: [F, ...F[]]}): ResultType<T, F>
-    public read<F extends Fields<T>>(id: string, options?: {readonly params?: object}): D & Revision
-    public read<F extends Fields<T>>(id: string, {params, fields}: {readonly params?: object, readonly fields?: F[]} = {}) {
-        return openidm.read(`${this.type}/${id}`, params, fields)
+    public read<F extends Fields<T>>(id: string, options: { readonly params?: object, readonly fields: [F, ...F[]]}): ResultType<T, F>
+    public read<F extends Fields<T>>(id: string, options: { readonly params?: object, readonly unCheckedFields: string[]}): T & Revision
+    public read<F extends Fields<T>>(id: string, options?: { readonly params?: object}): D & Revision
+    public read<F extends Fields<T>>(id: string, {params, fields, unCheckedFields}: { readonly params?: object, readonly fields?: F[], readonly unCheckedFields?: string[]} = {}) {
+        return openidm.read(`${this.type}/${id}`, params, unCheckedFields ? unCheckedFields : fields)
     }
 
-    public create<F extends Fields<T>>(newResourceId: string | null, content: WithOptionalId<T>, params: object | undefined, fields: F[]): ResultType<T, F>
-    public create<F extends Fields<T>>(newResourceId: string | null, content: WithOptionalId<T>, params?: object): D & Revision
-    public create<F extends Fields<T>>(newResourceId: string | null, content: WithOptionalId<T>, params?: object, fields?: F[]) {
-        return openidm.create(this.type, newResourceId, content, params, fields)
+    public create<F extends Fields<T>>(newResourceId: string | null, content: WithOptionalId<T>, options: { readonly params?: object, readonly fields: F[] }): ResultType<T, F>
+    public create<F extends Fields<T>>(newResourceId: string | null, content: WithOptionalId<T>, options: { readonly params?: object, readonly unCheckedFields: string[] }): T & Revision
+    public create<F extends Fields<T>>(newResourceId: string | null, content: WithOptionalId<T>, options?: { readonly params?: object }): D & Revision
+    public create<F extends Fields<T>>(newResourceId: string | null, content: WithOptionalId<T>, {params, fields, unCheckedFields}: {readonly params?: object, readonly fields?: F[], readonly unCheckedFields?: string[]}) {
+        return openidm.create(this.type, newResourceId, content, params, unCheckedFields ? unCheckedFields : fields)
     }
 
-    public patch<F extends Fields<T>>(id: string, rev: string | null, value: PatchOpts[], params: object | undefined, fields: F[]): ResultType<T, F>
-    public patch<F extends Fields<T>>(id: string, rev: string | null, value: PatchOpts[], params?: object): D & Revision
-    public patch<F extends Fields<T>>(id: string, rev: string | null, value: PatchOpts[], params?: object, fields?: F[]) {
-        return openidm.patch(`${this.type}/${id}`, rev, value, params, fields)
+    public patch<F extends Fields<T>>(id: string, rev: string | null, value: PatchOpts[], options: { readonly params?: object, readonly fields: F[] }): ResultType<T, F>
+    public patch<F extends Fields<T>>(id: string, rev: string | null, value: PatchOpts[], options: { readonly params?: object, readonly unCheckedFields: F[] }): T & Revision
+    public patch<F extends Fields<T>>(id: string, rev: string | null, value: PatchOpts[], options?: { readonly params?: object }): D & Revision
+    public patch<F extends Fields<T>>(id: string, rev: string | null, value: PatchOpts[], {params, fields, unCheckedFields}: {params?: object, fields?: F[], unCheckedFields?: string[]}) {
+        return openidm.patch(`${this.type}/${id}`, rev, value, params, unCheckedFields ? unCheckedFields : fields)
     }
 
-    public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, params: object | undefined, fields?: F[]): ResultType<T, F>
-    public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, params?: object): D & Revision
-    public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, params?: object, fields?: F[]) {
-        return openidm.update(`${this.type}/${id}`, rev, value, params, fields)
+    public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, options: { readonly params: object, readonly fields: F[] }): ResultType<T, F>
+    public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, options: { readonly params: object, readonly unCheckedFields: string[] }): T & Revision
+    public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, options: { readonly params: object }): D & Revision
+    public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, { params, fields, unCheckedFields}: {readonly params?: object, readonly fields?: F[], readonly unCheckedFields?: string[] }) {
+        return openidm.update(`${this.type}/${id}`, rev, value, params, unCheckedFields ? unCheckedFields : fields)
     }
 
-    public delete<F extends Fields<T>>(id: string, rev: string | null, params: object | undefined, fields?: F[]): ResultType<T, F>
-    public delete<F extends Fields<T>>(id: string, rev: string | null, params?: object): D & Revision
-    public delete<F extends Fields<T>>(id: string, rev: string | null, params?: object, fields?: F[]) {
-        return openidm.delete(`${this.type}/${id}`, rev, params, fields)
+    public delete<F extends Fields<T>>(id: string, rev: string | null, options: { readonly params?: object, readonly fields?: F[] }): ResultType<T, F>
+    public delete<F extends Fields<T>>(id: string, rev: string | null, options: { readonly params?: object, readonly unCheckedFields?: F[] }): T & Revision
+    public delete<F extends Fields<T>>(id: string, rev: string | null, options?: { readonly params?: object} ): D & Revision
+    public delete<F extends Fields<T>>(id: string, rev: string | null, { params, fields, unCheckedFields}: { readonly params?: object, readonly fields?: F[], unCheckedFields?: string[]}) {
+        return openidm.delete(`${this.type}/${id}`, rev, params, unCheckedFields ? unCheckedFields : fields)
     }
 
-    public query<F extends Fields<T>>(params: QueryFilter, fields: F[]): QueryResult<ResultType<T, F>>
-    public query<F extends Fields<T>>(params: QueryFilter): QueryResult<D & Revision>
-    public query<F extends Fields<T>>(params: QueryFilter, fields?: F[]) {
-        return openidm.query(this.type, params, fields)
+    public query<F extends Fields<T>>(params: QueryFilter, options: { readonly fields: F[]}): QueryResult<ResultType<T, F>>
+    public query<F extends Fields<T>>(params: QueryFilter, options: { readonly unCheckedFields: string[]}): QueryResult<T & Revision>
+    public query<F extends Fields<T>>(params: QueryFilter, options?: {}): QueryResult<D & Revision>
+    public query<F extends Fields<T>>(params: QueryFilter, {fields, unCheckedFields}: {readonly fields?: F[], readonly unCheckedFields?: string[]}) {
+        return openidm.query(this.type, params, unCheckedFields ? unCheckedFields : fields)
     }
 
     /**
