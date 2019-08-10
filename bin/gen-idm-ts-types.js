@@ -34,12 +34,30 @@ const connectorObjectValueType = coalesce(idmTsCodeGen.useUnknownInsteadOfAnyFor
   ? "unknown"
   : "any";
 
-const generateManagedTypeName = managedObjectName => "Managed" + camelCase(managedObjectName, { pascalCase: true });
+const generateManagedTypeName = managedObjectName =>
+  "Managed" +
+  camelCase(managedObjectName, {
+    pascalCase: true
+  });
 const generateSystemTypeName = (connectorName, typeName) =>
-  "System" + camelCase(connectorName, { pascalCase: true }) + camelCase(typeName, { pascalCase: true });
-const generateSystemObjName = (connectorName, typeName) => camelCase(connectorName) + camelCase(typeName, { pascalCase: true });
+  "System" +
+  camelCase(connectorName, {
+    pascalCase: true
+  }) +
+  camelCase(typeName, {
+    pascalCase: true
+  });
+const generateSystemObjName = (connectorName, typeName) =>
+  camelCase(connectorName) +
+  camelCase(typeName, {
+    pascalCase: true
+  });
 
-const generateManagedSubTypeName = (managedObjectBaseType, subType) => managedObjectBaseType + camelCase(subType, { pascalCase: true });
+const generateManagedSubTypeName = (managedObjectBaseType, subType) =>
+  managedObjectBaseType +
+  camelCase(subType, {
+    pascalCase: true
+  });
 
 const filterResourceCollection = resourceCollection => resourceCollection.filter(res => res.path.startsWith("managed/"));
 
@@ -269,7 +287,10 @@ function generateIdmTsTypes() {
   // Load the prettier config
   prettier.resolveConfig(process.cwd()).then(options => {
     // Prettify the generated IDM TS tpes
-    const formatted = prettier.format(template, { ...options, parser: "typescript" });
+    const formatted = prettier.format(template, {
+      ...options,
+      parser: "typescript"
+    });
 
     fs.writeFile(idmTsCodeGen.idmTsTypesOutputFile, formatted, err => {
       if (err) {

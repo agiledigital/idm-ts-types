@@ -4,83 +4,36 @@ declare const logger: Logger;
 declare const openidm: OpenIDM;
 
 interface IDMBaseObject {
-  readonly _id: string
+  readonly _id: string;
 }
 
 type Revision = {
-  readonly _rev: string
-}
+  readonly _rev: string;
+};
 
 type Result = IDMBaseObject & Revision & Record<string, any>;
 
 interface EncryptedValue {}
 interface HashedValue {}
 
-type HashAlgorithm =
-  | "SHA-256"
-  | "SHA-384"
-  | "SHA-512"
-  | "Bcrypt"
-  | "Scrypt"
-  | "PBKDF2";
+type HashAlgorithm = "SHA-256" | "SHA-384" | "SHA-512" | "Bcrypt" | "Scrypt" | "PBKDF2";
 
-type PatchOperation =
-  | "add"
-  | "remove"
-  | "replace"
-  | "increment"
+type PatchOperation = "add" | "remove" | "replace" | "increment";
 
 type PatchOpts = {
-  operation: PatchOperation
-  field: string
-  value: any
-}
+  operation: PatchOperation;
+  field: string;
+  value: any;
+};
 
 interface OpenIDM {
-  create: (
-    resourceName: string,
-    newResourceId: string | null,
-    content: object,
-    params?: object | null,
-    fields?: string[]
-  ) => Result;
-  patch: (
-    resourceName: string,
-    rev: string | null,
-    value: PatchOpts[],
-    params?: object | null,
-    fields?: string[]
-  ) => Result;
-  read: (
-    resourceName: string,
-    params?: object | null,
-    fields?: string[]
-  ) => Result | null;
-  update: (
-    resourceName: string,
-    rev: string | null,
-    value: object,
-    params?: object | null,
-    fields?: string[]
-  ) => Result;
-  delete: (
-    resourceName: string,
-    rev?: string | null,
-    params?: object | null,
-    fields?: string[]
-  ) => Result;
-  query: (
-    resourceName: string,
-    params: QueryFilter,
-    fields?: string[]
-  ) => QueryResult<Result>;
-  action: (
-    resource: string,
-    actionName: string,
-    content?: object | null,
-    params?: object | null,
-    fields?: string[]
-  ) => any;
+  create: (resourceName: string, newResourceId: string | null, content: object, params?: object | null, fields?: string[]) => Result;
+  patch: (resourceName: string, rev: string | null, value: PatchOpts[], params?: object | null, fields?: string[]) => Result;
+  read: (resourceName: string, params?: object | null, fields?: string[]) => Result | null;
+  update: (resourceName: string, rev: string | null, value: object, params?: object | null, fields?: string[]) => Result;
+  delete: (resourceName: string, rev?: string | null, params?: object | null, fields?: string[]) => Result;
+  query: (resourceName: string, params: QueryFilter, fields?: string[]) => QueryResult<Result>;
+  action: (resource: string, actionName: string, content?: object | null, params?: object | null, fields?: string[]) => any;
   encrypt: (value: any, cipher: string, alias: string) => EncryptedValue;
   decrypt: (value: EncryptedValue) => any;
   isEncrypted: (value: any) => value is EncryptedValue;
@@ -101,8 +54,7 @@ interface QueryResult<T> {
   remainingPagedResults?: number;
 }
 
-type QueryFilter = (QueryFilterParams | QueryIdParams | QueryExpressionParams) &
-  QueryOpts;
+type QueryFilter = (QueryFilterParams | QueryIdParams | QueryExpressionParams) & QueryOpts;
 
 type QueryFilterParams = { _queryFilter: string };
 type QueryIdParams = { _queryId: string };
@@ -126,11 +78,7 @@ interface Logger {
 }
 
 interface IdentityServer {
-  getProperty: (
-    name: string,
-    defaultVal?: string | null,
-    substitute?: boolean
-  ) => string;
+  getProperty: (name: string, defaultVal?: string | null, substitute?: boolean) => string;
   getInstallLocation: () => string;
   getProjectLocation: () => string;
   getWorkingLocation: () => string;
