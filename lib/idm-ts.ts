@@ -84,13 +84,14 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
     return openidm.delete(`${this.type}/${id}`, rev, params, unCheckedFields ? unCheckedFields : fields);
   }
 
+  // TODO: This one doesn't work properly, it causes all type checking to disappear on fields. But not having this means, that when you don't provide
+  // fields, it thinks everything is available including non-default fields
+  //   public query<F extends Fields<T>>(params: QueryFilter, options?: {}): QueryResult<D & Revision>;
   public query<F extends Fields<T>>(params: QueryFilter, options: { readonly fields: F[] }): QueryResult<ResultType<T, F>>;
-  public query<F extends Fields<T>>(params: QueryFilter, options: { readonly unCheckedFields: string[] }): QueryResult<T & Revision>;
-  public query<F extends Fields<T>>(params: QueryFilter, options?: {}): QueryResult<D & Revision>;
+  public query<F extends Fields<T>>(params: QueryFilter, options?: { readonly unCheckedFields?: string[] }): QueryResult<T & Revision>;
   public query<F extends Fields<T>>(params: QueryFilter, { fields, unCheckedFields }: { readonly fields?: F[]; readonly unCheckedFields?: string[] }) {
     return openidm.query(this.type, params, unCheckedFields ? unCheckedFields : fields);
   }
-
   /**
    * Create a relationship object for the given managed object and id.
    *
