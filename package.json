@@ -1,6 +1,6 @@
 {
   "name": "@agiledigital/idm-ts-types",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "ForgeRock IDM TypeScript Types",
   "homepage": "https://github.com/agiledigital/idm-ts-types",
   "bugs": {
@@ -33,7 +33,7 @@
   },
   "scripts": {
     "type-check": "tsc --noEmit",
-    "type-check:watch": "npm run type-check -- --watch",
+    "type-check:watch": "yarn type-check --watch",
     "build:types": "tsc --emitDeclarationOnly --declaration",
     "format": "prettier --write \"lib/**/*.ts\" \"bin/**/*.{js,ts}\"",
     "lint": "tslint -p tsconfig.json -c tslint.json"

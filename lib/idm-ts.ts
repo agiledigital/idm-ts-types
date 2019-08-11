@@ -39,7 +39,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
   public create<F extends Fields<T>>(
     newResourceId: string | null,
     content: WithOptionalId<T>,
-    { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; readonly unCheckedFields?: string[] }
+    { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}
   ) {
     return openidm.create(this.type, newResourceId, content, params, unCheckedFields ? unCheckedFields : fields);
   }
@@ -51,7 +51,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
     id: string,
     rev: string | null,
     value: PatchOpts[],
-    { params, fields, unCheckedFields }: { params?: object; fields?: F[]; unCheckedFields?: string[] }
+    { params, fields, unCheckedFields }: { params?: object; fields?: F[]; unCheckedFields?: string[] } = {}
   ) {
     return openidm.patch(`${this.type}/${id}`, rev, value, params, unCheckedFields ? unCheckedFields : fields);
   }
@@ -68,28 +68,26 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
     id: string,
     rev: string | null,
     value: WithOptionalId<T>,
-    { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; readonly unCheckedFields?: string[] }
+    { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}
   ) {
     return openidm.update(`${this.type}/${id}`, rev, value, params, unCheckedFields ? unCheckedFields : fields);
   }
 
-  public delete<F extends Fields<T>>(id: string, rev: string | null, options: { readonly params?: object; readonly fields?: F[] }): ResultType<T, F>;
-  public delete<F extends Fields<T>>(id: string, rev: string | null, options: { readonly params?: object; readonly unCheckedFields?: F[] }): T & Revision;
+  public delete<F extends Fields<T>>(id: string, rev: string | null, options: { readonly params?: object; readonly fields: F[] }): ResultType<T, F>;
+  public delete<F extends Fields<T>>(id: string, rev: string | null, options: { readonly params?: object; readonly unCheckedFields: F[] }): T & Revision;
   public delete<F extends Fields<T>>(id: string, rev: string | null, options?: { readonly params?: object }): D & Revision;
   public delete<F extends Fields<T>>(
     id: string,
     rev: string | null,
-    { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; unCheckedFields?: string[] }
+    { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; unCheckedFields?: string[] } = {}
   ) {
     return openidm.delete(`${this.type}/${id}`, rev, params, unCheckedFields ? unCheckedFields : fields);
   }
 
-  // TODO: This one doesn't work properly, it causes all type checking to disappear on fields. But not having this means, that when you don't provide
-  // fields, it thinks everything is available including non-default fields
-  //   public query<F extends Fields<T>>(params: QueryFilter, options?: {}): QueryResult<D & Revision>;
   public query<F extends Fields<T>>(params: QueryFilter, options: { readonly fields: F[] }): QueryResult<ResultType<T, F>>;
-  public query<F extends Fields<T>>(params: QueryFilter, options?: { readonly unCheckedFields?: string[] }): QueryResult<T & Revision>;
-  public query<F extends Fields<T>>(params: QueryFilter, { fields, unCheckedFields }: { readonly fields?: F[]; readonly unCheckedFields?: string[] }) {
+  public query<F extends Fields<T>>(params: QueryFilter, options: { readonly unCheckedFields: string[] }): QueryResult<T & Revision>;
+  public query<F extends Fields<T>>(params: QueryFilter): QueryResult<D & Revision>;
+  public query<F extends Fields<T>>(params: QueryFilter, { fields, unCheckedFields }: { readonly fields?: F[]; readonly unCheckedFields?: string[]} = {}) {
     return openidm.query(this.type, params, unCheckedFields ? unCheckedFields : fields);
   }
   /**
