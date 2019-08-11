@@ -51,7 +51,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
     id: string,
     rev: string | null,
     value: PatchOpts[],
-    { params, fields, unCheckedFields }: { params?: object; fields?: F[]; unCheckedFields?: string[] } = {}
+    { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}
   ) {
     return openidm.patch(`${this.type}/${id}`, rev, value, params, unCheckedFields ? unCheckedFields : fields);
   }
@@ -79,7 +79,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
   public delete<F extends Fields<T>>(
     id: string,
     rev: string | null,
-    { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; unCheckedFields?: string[] } = {}
+    { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}
   ) {
     return openidm.delete(`${this.type}/${id}`, rev, params, unCheckedFields ? unCheckedFields : fields);
   }
