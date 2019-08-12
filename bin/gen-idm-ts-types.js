@@ -94,7 +94,12 @@ function convertSystemType(props, propName) {
 function convertManagedType(props, propName, moName, tsTypeName, subManagedTypes) {
   var type;
   var schemaType = props.type;
+  var nullable = "";
   if (Array.isArray(schemaType)) {
+    // Check if the type is nullable
+    if (schemaType.length === 2 && schemaType[1] === "null") {
+      nullable = " | null"
+    }
     schemaType = schemaType[0];
   }
   switch (schemaType) {
@@ -123,6 +128,7 @@ function convertManagedType(props, propName, moName, tsTypeName, subManagedTypes
     default:
       throw new Error("Unsupported type [" + schemaType + "] for property [" + propName + "]");
   }
+  type += nullable;
   return type;
 }
 
