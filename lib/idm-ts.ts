@@ -63,7 +63,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
     value: WithOptionalId<T>,
     options: { readonly params?: object; readonly unCheckedFields: string[] }
   ): T & Revision;
-  public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, options: { readonly params?: object }): D & Revision;
+  public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, options?: { readonly params?: object }): D & Revision;
   public update<F extends Fields<T>>(
     id: string,
     rev: string | null,
