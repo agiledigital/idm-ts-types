@@ -56,14 +56,14 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
     return openidm.patch(`${this.type}/${id}`, rev, value, params, unCheckedFields ? unCheckedFields : fields);
   }
 
-  public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, options: { readonly params: object; readonly fields: F[] }): ResultType<T, F>;
+  public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, options: { readonly params?: object; readonly fields: F[] }): ResultType<T, F>;
   public update<F extends Fields<T>>(
     id: string,
     rev: string | null,
     value: WithOptionalId<T>,
-    options: { readonly params: object; readonly unCheckedFields: string[] }
+    options: { readonly params?: object; readonly unCheckedFields: string[] }
   ): T & Revision;
-  public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, options: { readonly params: object }): D & Revision;
+  public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, options: { readonly params?: object }): D & Revision;
   public update<F extends Fields<T>>(
     id: string,
     rev: string | null,
