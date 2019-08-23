@@ -14,17 +14,17 @@ export type ReferenceType<T> = Partial<T> & {
   readonly _refResourceCollection?: string;
   readonly _refResourceId?: string;
   readonly _refProperties?: {
-    readonly _id: string;
-    readonly _rev: string;
-  };
+    readonly _id?: string;
+    readonly _rev?: string;
+  } & Record<string, unknown>;
 };
 
 export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<string>> {
   constructor(readonly type: Exclude<T["_tag"], undefined>) {}
 
-  public read<F extends Fields<T>>(id: string, options: { readonly params?: object; readonly fields: [F, ...F[]] }): ResultType<T, F>;
-  public read<F extends Fields<T>>(id: string, options: { readonly params?: object; readonly unCheckedFields: string[] }): T & Revision;
-  public read<F extends Fields<T>>(id: string, options?: { readonly params?: object }): D & Revision;
+  public read<F extends Fields<T>>(id: string, options: { readonly params?: object; readonly fields: [F, ...F[]] }): ResultType<T, F> | null;
+  public read<F extends Fields<T>>(id: string, options: { readonly params?: object; readonly unCheckedFields: string[] }): T & Revision | null;
+  public read<F extends Fields<T>>(id: string, options?: { readonly params?: object }): D & Revision | null;
   public read<F extends Fields<T>>(id: string, { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}) {
     return openidm.read(`${this.type}/${id}`, params, unCheckedFields ? unCheckedFields : fields);
   }
@@ -90,14 +90,18 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
   public query<F extends Fields<T>>(params: QueryFilter, { fields, unCheckedFields }: { readonly fields?: F[]; readonly unCheckedFields?: string[]} = {}) {
     return openidm.query(this.type, params, unCheckedFields ? unCheckedFields : fields);
   }
+
   /**
    * Create a relationship object for the given managed object and id.
    *
    * @param managedObjectId The managed object id to link to
+   * @param refProperties Any additional _refProperties to add to the relationship
    */
-  public relationship(managedObjectId: string) {
+  public relationship(managedObjectId: string, refProperties: Record<string, unknown> = {}) {
+    const refProps = { _refProperties: refProperties }
     return {
-      _ref: this.type + "/" + managedObjectId
+      _ref: this.type + "/" + managedObjectId,
+      ...refProps
     };
   }
 }
