@@ -53,52 +53,26 @@ const generateSystemObjName = (connectorName, typeName) =>
     pascalCase: true
   });
 
-const generateManagedSubTypeName = (managedObjectBaseType, subType) =>
-  managedObjectBaseType +
+const generateSubTsTypeName = (objectBaseType, subType) =>
+  objectBaseType +
   camelCase(subType, {
     pascalCase: true
   });
+
+const isManagedType = typeName => typeName.startsWith("Managed");
 
 const filterResourceCollection = resourceCollection => resourceCollection.filter(res => res.path.startsWith("managed/"));
 
 const provisionerRegex = /\.*\/provisioner.openicf-(.*)\.json.*/;
 
-// TODO: Support nested types like managed objects
-function convertSystemType(props, propName) {
-  var type;
-  var schemaType = props.type;
-
-  switch (schemaType) {
-    case "boolean":
-    case "number":
-    case "string":
-      type = schemaType;
-      break;
-    case "object":
-      type = `Record<string, ${connectorObjectValueType}>`;
-      break;
-    case "array":
-      if (props.items && props.items.type) {
-        const childType = convertSystemType(props.items, propName);
-        type = `${childType}[]`;
-      } else {
-        type = `${connectorObjectValueType}[]`;
-      }
-      break;
-    default:
-      throw new Error("Unsupported type [" + schemaType + "] for property [" + propName + "]");
-  }
-  return type;
-}
-
-function convertManagedType(props, propName, moName, tsTypeName, subManagedTypes) {
+function convertType(props, propName, originalObjectName, tsTypeName, subTypes) {
   var type;
   var schemaType = props.type;
   var nullable = "";
   if (Array.isArray(schemaType)) {
     // Check if the type is nullable
     if (schemaType.length === 2 && schemaType[1] === "null") {
-      nullable = " | null"
+      nullable = " | null";
     }
     schemaType = schemaType[0];
   }
@@ -108,21 +82,27 @@ function convertManagedType(props, propName, moName, tsTypeName, subManagedTypes
     case "string":
       type = schemaType;
       break;
+    case "integer":
+      type = "number";
+      break;
     case "object":
       if (props.properties && Object.keys(props.properties).length > 0) {
-        type = generateManagedSubType(props, moName + "/" + propName, tsTypeName, propName, subManagedTypes);
+        type = generateSubType(props, originalObjectName + "/" + propName, tsTypeName, propName, subTypes);
       } else {
         type = `Record<string, ${managedObjectValueType}>`;
       }
       break;
     case "array":
       if (props.items && props.items.type) {
-        type = convertManagedType(props.items, propName, moName, tsTypeName, subManagedTypes) + "[]";
+        type = convertType(props.items, propName, originalObjectName, tsTypeName, subTypes) + "[]";
       } else {
         type = `${managedObjectValueType}[]`;
       }
       break;
     case "relationship":
+      if (!isManagedType(tsTypeName)) {
+        throw new Error(`Relationships are only supported for Managed Objects. Type ${tsTypeName}, property ${propName}`);
+      }
       type = `ReferenceType<${generateManagedTypeName(filterResourceCollection(props.resourceCollection)[0].path.replace("managed/", ""))}>`;
       break;
     default:
@@ -156,7 +136,7 @@ function compareName(a, b) {
   return 0;
 }
 
-function generateConnectorTypes(idmConfigDir) {
+function generateConnectorTypes(idmConfigDir, subConnectorTypes) {
   const connectorFiles = glob.sync(idmConfigDir + "/provisioner.openicf-*.json");
 
   return connectorFiles.map(conn => {
@@ -180,16 +160,34 @@ function generateConnectorTypes(idmConfigDir) {
       const connObj = connectorObject.objectTypes[objName];
       const tsType = generateSystemTypeName(systemTypeName, objName);
       const sysObjName = generateSystemObjName(systemTypeName, objName);
+      const fullName = systemTypeName + "/" + objName;
       return {
-        fullName: systemTypeName + "/" + objName,
+        fullName: fullName,
         name: sysObjName,
         tsType: tsType,
         connectorName: systemTypeName,
         properties: Object.keys(connObj.properties).map(propName => {
           const value = connObj.properties[propName];
+
+          var title = value.title;
+          if (!title && value.description) {
+            title = value.description;
+          }
+          var description;
+
+          // We don't want the description if it's the same as the title.
+          if (title === value.description) {
+            description = "";
+          } else {
+            description = value.description;
+          }
+
           return {
             name: propName,
-            type: convertSystemType(value, propName)
+            type: convertType(value, propName, fullName, tsType, subConnectorTypes),
+            required: connObj.required ? connObj.required.includes(propName) : false,
+            title: title,
+            description: description
           };
         })
       };
@@ -231,7 +229,7 @@ function generateManagedTypes(idmConfigDir, subManagedTypes) {
         return {
           name: propName,
           returnByDefault: calcReturnByDefault(value),
-          type: convertManagedType(value, propName, mo.name, managedTypeName, subManagedTypes),
+          type: convertType(value, propName, mo.name, managedTypeName, subManagedTypes),
           required: mo.schema.required.includes(propName),
           title: title,
           description: description
@@ -243,14 +241,14 @@ function generateManagedTypes(idmConfigDir, subManagedTypes) {
   return idmTypes;
 }
 
-function generateManagedSubType(subType, moName, managedObjectBaseName, propName, subManagedTypes) {
+function generateSubType(subType, subTypeName, originalObjectBaseName, propName, subTypes) {
   // Don't add Sub to the start of the name if it already starts with Sub
-  const subName = managedObjectBaseName.startsWith("Sub") ? managedObjectBaseName : "Sub" + managedObjectBaseName;
-  const managedTypeName = generateManagedSubTypeName(subName, propName);
-  subManagedTypes.push({
-    name: moName,
-    tsType: managedTypeName,
-    parentTsType: managedObjectBaseName,
+  const subName = originalObjectBaseName.startsWith("Sub") ? originalObjectBaseName : "Sub" + originalObjectBaseName;
+  const subTsTypeName = generateSubTsTypeName(subName, propName);
+  subTypes.push({
+    name: subTypeName,
+    tsType: subTsTypeName,
+    parentTsType: originalObjectBaseName,
     properties: Object.keys(subType.properties).map(propertyName => {
       const value = subType.properties[propertyName];
       var title = value.title;
@@ -267,7 +265,7 @@ function generateManagedSubType(subType, moName, managedObjectBaseName, propName
       }
       return {
         name: propertyName,
-        type: convertManagedType(value, propertyName, moName, managedTypeName, subManagedTypes),
+        type: convertType(value, propertyName, subTypeName, subTsTypeName, subTypes),
         required: Array.isArray(subType.required) ? subType.required.includes(propertyName) : false,
         title: title,
         description: description
@@ -275,19 +273,22 @@ function generateManagedSubType(subType, moName, managedObjectBaseName, propName
     })
   });
 
-  return managedTypeName;
+  return subTsTypeName;
 }
 
 function generateIdmTsTypes() {
   var subManagedTypes = [];
   const managedIdmTypes = generateManagedTypes(idmTsCodeGen.idmProjectConfigDir, subManagedTypes);
   subManagedTypes = subManagedTypes.sort(compareName);
-  const connectorIdmTypes = _.flatten(generateConnectorTypes(idmTsCodeGen.idmProjectConfigDir)).sort(compareName);
+  var subConnectorTypes = [];
+  const connectorIdmTypes = _.flatten(generateConnectorTypes(idmTsCodeGen.idmProjectConfigDir, subConnectorTypes)).sort(compareName);
+  subConnectorTypes = subConnectorTypes.sort(compareName);
 
   const template = nunjucks.render(path.resolve(__dirname, "idm.ts.nj"), {
     managedObjects: managedIdmTypes,
     subManagedTypes: subManagedTypes,
-    connectorObjects: connectorIdmTypes
+    connectorObjects: connectorIdmTypes,
+    subConnectorTypes: subConnectorTypes
   });
 
   // Load the prettier config

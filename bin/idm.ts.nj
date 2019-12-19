@@ -69,10 +69,34 @@ export type {{ mo.tsType }} = {
 export type {{ co.tsType }} = {
     // tslint:disable-next-line: no-duplicate-string
     _tag?: 'system/{{ co.fullName }}'
-    {% for prop in co.properties -%}
-    '{{ prop.name }}'?: {{ prop.type | safe }}
+    {% for prop in co.properties -%}{% if prop.title %}
+    /**
+     * {{ prop.title }}{% if prop.description %}     
+     *
+     * {{ prop.description }}{% endif %}
+     */{% endif %}
+    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
     {% endfor %}
 } & IDMBaseObject
+
+{% endfor %}
+
+{% for co in subConnectorTypes %}
+/**
+ * {{ co.name }} Sub Type of {@link {{ co.parentTsType }}}
+ */
+export type {{ co.tsType }} = {
+    // tslint:disable-next-line: no-duplicate-string
+    _tag?: 'system/{{ co.name }}'
+    {% for prop in co.properties -%}{% if prop.title %}
+    /**
+     * {{ prop.title }}{% if prop.description %}     
+     *
+     * {{ prop.description }}{% endif %}
+     */{% endif %}
+    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
+    {% endfor %}
+}
 
 {% endfor %}
 

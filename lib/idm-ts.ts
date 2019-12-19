@@ -87,7 +87,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
   public query<F extends Fields<T>>(params: QueryFilter, options: { readonly fields: F[] }): QueryResult<ResultType<T, F>>;
   public query<F extends Fields<T>>(params: QueryFilter, options: { readonly unCheckedFields: string[] }): QueryResult<T & Revision>;
   public query<F extends Fields<T>>(params: QueryFilter): QueryResult<D & Revision>;
-  public query<F extends Fields<T>>(params: QueryFilter, { fields, unCheckedFields }: { readonly fields?: F[]; readonly unCheckedFields?: string[]} = {}) {
+  public query<F extends Fields<T>>(params: QueryFilter, { fields, unCheckedFields }: { readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}) {
     return openidm.query(this.type, params, unCheckedFields ? unCheckedFields : fields);
   }
 
@@ -98,7 +98,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    * @param refProperties Any additional _refProperties to add to the relationship
    */
   public relationship(managedObjectId: string, refProperties: Record<string, unknown> = {}) {
-    const refProps = { _refProperties: refProperties }
+    const refProps = { _refProperties: refProperties };
     return {
       _ref: this.type + "/" + managedObjectId,
       ...refProps
