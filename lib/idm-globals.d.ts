@@ -26,6 +26,8 @@ type PatchOpts = {
   value: any;
 };
 
+type Action = "CREATE" | "UPDATE" | "DELETE" | "LINK" | "UNLINK" | "EXCEPTION" | "IGNORE" | "REPORT" | "NOREPORT" | "ASYNC"
+
 interface OpenIDM {
   create: (resourceName: string, newResourceId: string | null, content: object, params?: object | null, fields?: string[]) => Result;
   patch: (resourceName: string, rev: string | null, value: PatchOpts[], params?: object | null, fields?: string[]) => Result;

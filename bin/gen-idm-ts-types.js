@@ -109,7 +109,8 @@ function convertType(props, propName, originalObjectName, tsTypeName, subTypes) 
         throw new Error(`Relationships are only supported for Managed Objects. Type ${tsTypeName}, property ${propName}`);
       }
       // Relationships can have multiple types, so we need to get all of the types
-      type = filterResourceCollection(props.resourceCollection).map(mo => `ReferenceType<${generateManagedTypeName(mo.path.replace("managed/", ""))}>`);
+      let relTypes = filterResourceCollection(props.resourceCollection).map(mo => generateManagedTypeName(mo.path.replace("managed/", ""))).join(" | ");
+      type = `ReferenceType<${relTypes}>`;
       break;
     default:
       throw new Error("Unsupported type [" + schemaType + "] for property [" + propName + "]");
