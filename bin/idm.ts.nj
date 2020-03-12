@@ -16,7 +16,7 @@ export type {{ mo.tsType }}Defaults = {
      *
      * {{ prop.description }}{% endif %}
      */{% endif %}
-    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
+    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | flattenType | safe }}
     {% endfor %}
 } & IDMBaseObject
 
@@ -32,7 +32,7 @@ export type {{ mo.tsType }}NonDefaults = {
      *
      * {{ prop.description }}{% endif %}
      */{% endif %}
-    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
+    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | flattenType | safe }}
     {% endfor %}
 }
 
@@ -56,7 +56,7 @@ export type {{ mo.tsType }} = {
      *
      * {{ prop.description }}{% endif %}
      */{% endif %}
-    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
+    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | flattenType | safe }}
     {% endfor %}
 }
 
@@ -75,7 +75,7 @@ export type {{ co.tsType }} = {
      *
      * {{ prop.description }}{% endif %}
      */{% endif %}
-    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
+    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | flattenType | safe }}
     {% endfor %}
 } & IDMBaseObject
 
@@ -94,7 +94,7 @@ export type {{ co.tsType }} = {
      *
      * {{ prop.description }}{% endif %}
      */{% endif %}
-    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | safe }}
+    '{{ prop.name }}'{% if prop.required == false %}?{% endif %}: {{ prop.type | flattenType | safe }}
     {% endfor %}
 }
 

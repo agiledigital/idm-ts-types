@@ -68,11 +68,14 @@ const provisionerRegex = /\.*\/provisioner.openicf-(.*)\.json.*/;
 function convertType(props, propName, originalObjectName, tsTypeName, subTypes) {
   var type;
   var schemaType = props.type;
-  var nullable = "";
+
+  // Lets presume the type isn't nullable
+  var isNullable = false;
+
   if (Array.isArray(schemaType)) {
     // Check if the type is nullable
     if (schemaType.length === 2 && schemaType[1] === "null") {
-      nullable = " | null";
+      isNullable = true
     }
     schemaType = schemaType[0];
   }
@@ -94,7 +97,9 @@ function convertType(props, propName, originalObjectName, tsTypeName, subTypes) 
       break;
     case "array":
       if (props.items && props.items.type) {
-        type = convertType(props.items, propName, originalObjectName, tsTypeName, subTypes) + "[]";
+        let convertedType = convertType(props.items, propName, originalObjectName, tsTypeName, subTypes)
+        // Append the array syntax onto the converted type
+        type = convertedType.types.map(ct => `${ct}[]`)
       } else {
         type = `${managedObjectValueType}[]`;
       }
@@ -103,13 +108,15 @@ function convertType(props, propName, originalObjectName, tsTypeName, subTypes) 
       if (!isManagedType(tsTypeName)) {
         throw new Error(`Relationships are only supported for Managed Objects. Type ${tsTypeName}, property ${propName}`);
       }
-      type = `ReferenceType<${generateManagedTypeName(filterResourceCollection(props.resourceCollection)[0].path.replace("managed/", ""))}>`;
+      // Relationships can have multiple types, so we need to get all of the types
+      type = filterResourceCollection(props.resourceCollection).map(mo => `ReferenceType<${generateManagedTypeName(mo.path.replace("managed/", ""))}>`);
       break;
     default:
       throw new Error("Unsupported type [" + schemaType + "] for property [" + propName + "]");
   }
-  type += nullable;
-  return type;
+
+  // Return a consistent type object so that we can handle complex type objects such as relationships that have multiple types
+  return { nullable: isNullable, types: _.isArray(type) ? type : [type]};
 }
 
 function calcReturnByDefault(prop) {
@@ -134,6 +141,16 @@ function compareName(a, b) {
     return 1;
   }
   return 0;
+}
+
+/**
+ * Nunjucks filter to convert a Type object into a string
+ * 
+ * @param {object} type Type object to convert
+ */
+function flattenType(type) {
+  let mainTypes = type.types.join(" | ")
+  return mainTypes + (type.nullable ? " | null" : "")
 }
 
 function generateConnectorTypes(idmConfigDir, subConnectorTypes) {
@@ -277,6 +294,9 @@ function generateSubType(subType, subTypeName, originalObjectBaseName, propName,
 }
 
 function generateIdmTsTypes() {
+  const nunjucksEnv = new nunjucks.Environment(new nunjucks.FileSystemLoader(path.resolve(__dirname)));
+  nunjucksEnv.addFilter('flattenType', flattenType);
+
   var subManagedTypes = [];
   const managedIdmTypes = generateManagedTypes(idmTsCodeGen.idmProjectConfigDir, subManagedTypes);
   subManagedTypes = subManagedTypes.sort(compareName);
@@ -284,7 +304,7 @@ function generateIdmTsTypes() {
   const connectorIdmTypes = _.flatten(generateConnectorTypes(idmTsCodeGen.idmProjectConfigDir, subConnectorTypes)).sort(compareName);
   subConnectorTypes = subConnectorTypes.sort(compareName);
 
-  const template = nunjucks.render(path.resolve(__dirname, "idm.ts.nj"), {
+  const template = nunjucksEnv.render("idm.ts.nj", {
     managedObjects: managedIdmTypes,
     subManagedTypes: subManagedTypes,
     connectorObjects: connectorIdmTypes,
