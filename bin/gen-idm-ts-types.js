@@ -75,7 +75,7 @@ function convertType(props, propName, originalObjectName, tsTypeName, subTypes) 
   if (Array.isArray(schemaType)) {
     // Check if the type is nullable
     if (schemaType.length === 2 && schemaType[1] === "null") {
-      isNullable = true
+      isNullable = true;
     }
     schemaType = schemaType[0];
   }
@@ -97,9 +97,9 @@ function convertType(props, propName, originalObjectName, tsTypeName, subTypes) 
       break;
     case "array":
       if (props.items && props.items.type) {
-        let convertedType = convertType(props.items, propName, originalObjectName, tsTypeName, subTypes)
+        let convertedType = convertType(props.items, propName, originalObjectName, tsTypeName, subTypes);
         // Append the array syntax onto the converted type
-        type = convertedType.types.map(ct => `${ct}[]`)
+        type = convertedType.types.map(ct => `${ct}[]`);
       } else {
         type = `${managedObjectValueType}[]`;
       }
@@ -109,7 +109,9 @@ function convertType(props, propName, originalObjectName, tsTypeName, subTypes) 
         throw new Error(`Relationships are only supported for Managed Objects. Type ${tsTypeName}, property ${propName}`);
       }
       // Relationships can have multiple types, so we need to get all of the types
-      let relTypes = filterResourceCollection(props.resourceCollection).map(mo => generateManagedTypeName(mo.path.replace("managed/", ""))).join(" | ");
+      let relTypes = filterResourceCollection(props.resourceCollection)
+        .map(mo => generateManagedTypeName(mo.path.replace("managed/", "")))
+        .join(" | ");
       type = `ReferenceType<${relTypes}>`;
       break;
     default:
@@ -117,7 +119,7 @@ function convertType(props, propName, originalObjectName, tsTypeName, subTypes) 
   }
 
   // Return a consistent type object so that we can handle complex type objects such as relationships that have multiple types
-  return { nullable: isNullable, types: _.isArray(type) ? type : [type]};
+  return { nullable: isNullable, types: _.isArray(type) ? type : [type] };
 }
 
 function calcReturnByDefault(prop) {
@@ -146,13 +148,16 @@ function compareName(a, b) {
 
 /**
  * Nunjucks filter to convert a Type object into a string
- * 
+ *
  * @param {object} type Type object to convert
  */
 function flattenType(type) {
-  let mainTypes = type.types.join(" | ")
-  return mainTypes + (type.nullable ? " | null" : "")
+  let mainTypes = type.types.join(" | ");
+  return mainTypes + (type.nullable ? " | null" : "");
 }
+
+const isRequired = (property, propertyName, parent) =>
+  property.required === true || (parent.required !== undefined && parent.required.includes(propertyName));
 
 function generateConnectorTypes(idmConfigDir, subConnectorTypes) {
   const connectorFiles = glob.sync(idmConfigDir + "/provisioner.openicf-*.json");
@@ -179,6 +184,7 @@ function generateConnectorTypes(idmConfigDir, subConnectorTypes) {
       const tsType = generateSystemTypeName(systemTypeName, objName);
       const sysObjName = generateSystemObjName(systemTypeName, objName);
       const fullName = systemTypeName + "/" + objName;
+
       return {
         fullName: fullName,
         name: sysObjName,
@@ -203,7 +209,7 @@ function generateConnectorTypes(idmConfigDir, subConnectorTypes) {
           return {
             name: propName,
             type: convertType(value, propName, fullName, tsType, subConnectorTypes),
-            required: connObj.required ? connObj.required.includes(propName) : false,
+            required: isRequired(value, propName, connObj),
             title: title,
             description: description
           };
@@ -248,7 +254,7 @@ function generateManagedTypes(idmConfigDir, subManagedTypes) {
           name: propName,
           returnByDefault: calcReturnByDefault(value),
           type: convertType(value, propName, mo.name, managedTypeName, subManagedTypes),
-          required: mo.schema.required.includes(propName),
+          required: isRequired(value, propName, mo.schema),
           title: title,
           description: description
         };
@@ -296,7 +302,7 @@ function generateSubType(subType, subTypeName, originalObjectBaseName, propName,
 
 function generateIdmTsTypes() {
   const nunjucksEnv = new nunjucks.Environment(new nunjucks.FileSystemLoader(path.resolve(__dirname)));
-  nunjucksEnv.addFilter('flattenType', flattenType);
+  nunjucksEnv.addFilter("flattenType", flattenType);
 
   var subManagedTypes = [];
   const managedIdmTypes = generateManagedTypes(idmTsCodeGen.idmProjectConfigDir, subManagedTypes);
