@@ -1,6 +1,6 @@
 {
   "name": "@agiledigital/idm-ts-types",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "ForgeRock IDM TypeScript Types",
   "homepage": "https://github.com/agiledigital/idm-ts-types",
   "bugs": {
