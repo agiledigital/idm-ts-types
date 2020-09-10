@@ -1,9 +1,13 @@
+import { Filter, interpretToFilter } from "./query-filter";
+
 interface IDMObjectType<T extends string> extends IDMBaseObject {
   readonly _tag?: T;
 }
 
 type Fields<T> = Exclude<keyof T, "_tag"> & string;
 type ResultType<T extends IDMObjectType<string>, FieldTypes extends keyof T> = Pick<T, FieldTypes> & IDMObjectType<Exclude<T["_tag"], undefined>> & Revision;
+type QueryFilterTypesafeParams<T extends IDMObjectType<string>> = { filter: Filter<T> };
+type QueryFilterExtended<T extends IDMObjectType<string>> = QueryFilter | (QueryFilterTypesafeParams<T> & QueryOpts);
 
 export type WithOptionalId<A extends { _id: string }> = Omit<A, "_id"> & {
   _id?: string;
@@ -84,11 +88,27 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
     return openidm.delete(`${this.type}/${id}`, rev, params, unCheckedFields ? unCheckedFields : fields);
   }
 
-  public query<F extends Fields<T>>(params: QueryFilter, options: { readonly fields: F[] }): QueryResult<ResultType<T, F>>;
-  public query<F extends Fields<T>>(params: QueryFilter, options: { readonly unCheckedFields: string[] }): QueryResult<T & Revision>;
-  public query<F extends Fields<T>>(params: QueryFilter): QueryResult<D & Revision>;
-  public query<F extends Fields<T>>(params: QueryFilter, { fields, unCheckedFields }: { readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}) {
-    return openidm.query(this.type, params, unCheckedFields ? unCheckedFields : fields);
+  isTypeSafeFilter(params: QueryFilterExtended<T>): params is QueryFilterTypesafeParams<T> {
+    return (params as QueryFilterTypesafeParams<T>).filter !== undefined;
+  }
+
+  flattenFilter(params: QueryFilterExtended<T>): QueryFilter { 
+    if (this.isTypeSafeFilter(params)) {
+      // Pull out the filter from everything else
+      const { filter, ...noFilter} = params;
+
+      // Generate the query filter
+      return { ...noFilter, _queryFilter: interpretToFilter(filter)};
+    } else {
+      return params;
+    }
+  }
+
+  public query<F extends Fields<T>>(params: QueryFilterExtended<T>, options: { readonly fields: F[] }): QueryResult<ResultType<T, F>>;
+  public query<F extends Fields<T>>(params: QueryFilterExtended<T>, options: { readonly unCheckedFields: string[] }): QueryResult<T & Revision>;
+  public query<F extends Fields<T>>(params: QueryFilterExtended<T>): QueryResult<D & Revision>;
+  public query<F extends Fields<T>>(params: QueryFilterExtended<T>, { fields, unCheckedFields }: { readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}) {
+    return openidm.query(this.type, this.flattenFilter(params), unCheckedFields ? unCheckedFields : fields);
   }
 
   /**
