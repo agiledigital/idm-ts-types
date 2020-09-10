@@ -88,22 +88,6 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
     return openidm.delete(`${this.type}/${id}`, rev, params, unCheckedFields ? unCheckedFields : fields);
   }
 
-  isTypeSafeFilter(params: QueryFilterExtended<T>): params is QueryFilterTypesafeParams<T> {
-    return (params as QueryFilterTypesafeParams<T>).filter !== undefined;
-  }
-
-  flattenFilter(params: QueryFilterExtended<T>): QueryFilter { 
-    if (this.isTypeSafeFilter(params)) {
-      // Pull out the filter from everything else
-      const { filter, ...noFilter} = params;
-
-      // Generate the query filter
-      return { ...noFilter, _queryFilter: interpretToFilter(filter)};
-    } else {
-      return params;
-    }
-  }
-
   public query<F extends Fields<T>>(params: QueryFilterExtended<T>, options: { readonly fields: F[] }): QueryResult<ResultType<T, F>>;
   public query<F extends Fields<T>>(params: QueryFilterExtended<T>, options: { readonly unCheckedFields: string[] }): QueryResult<T & Revision>;
   public query<F extends Fields<T>>(params: QueryFilterExtended<T>): QueryResult<D & Revision>;
@@ -123,6 +107,22 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
       _ref: this.type + "/" + managedObjectId,
       ...refProps
     };
+  }
+
+  private isTypeSafeFilter(params: QueryFilterExtended<T>): params is QueryFilterTypesafeParams<T> {
+    return (params as QueryFilterTypesafeParams<T>).filter !== undefined;
+  }
+
+  private flattenFilter(params: QueryFilterExtended<T>): QueryFilter {
+    if (this.isTypeSafeFilter(params)) {
+      // Pull out the filter from everything else
+      const { filter, ...noFilter } = params;
+
+      // Generate the query filter
+      return { ...noFilter, _queryFilter: interpretToFilter(filter) };
+    } else {
+      return params;
+    }
   }
 }
 
