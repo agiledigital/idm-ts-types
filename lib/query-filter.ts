@@ -98,6 +98,15 @@ export const anyOf = <A>(...dsl: Filter<A>[]): Filter<A> => dsl.reduce((p, c) =>
 // this returns true if any are true.
 export const oneOf = <A, K extends keyof A>(field: keyof A, ...vals: A[K][]): Filter<A> => anyOf(...vals.map(x => equals(field, x)));
 
+const escapeQuotes = (str: string): string => str.replace("'", "\\'");
+const prepareValue = (val: unknown): string => {
+  if (typeof val === "string") {
+    return `'${escapeQuotes(val ?? "")}'`;
+  } else {
+    return (val as any)?.toString() ?? "''";
+  }
+}
+
 export const interpretToFilter = <A>(dsl: Filter<A>): string => {
   switch (dsl.kind) {
     case Kind.Equals:
@@ -108,7 +117,7 @@ export const interpretToFilter = <A>(dsl: Filter<A>): string => {
     case Kind.Contains:
     case Kind.StartsWith:
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      return `/${dsl.field} ${dsl.kind} '${dsl.val}'`;
+      return `/${dsl.field} ${dsl.kind} ${prepareValue(dsl.val)}`;
     case Kind.And:
     case Kind.Or:
       return `(${interpretToFilter(dsl.a)} ${dsl.kind} ${interpretToFilter(dsl.b)})`;
