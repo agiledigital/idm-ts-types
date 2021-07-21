@@ -52,5 +52,8 @@
   "typeCoverage": {
     "atLeast": 98
   },
-  "types": "./lib/idm-globals.d.ts"
+  "types": "./lib/idm-globals.d.ts",
+  "publishConfig": {
+    "access": "public"
+  }
 }
