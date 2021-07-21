@@ -5,7 +5,9 @@ interface IDMObjectType<T extends string> extends IDMBaseObject {
 }
 
 type Fields<T> = Exclude<keyof T, "_tag"> & string;
-type ResultType<T extends IDMObjectType<string>, FieldTypes extends keyof T> = Pick<T, FieldTypes> & IDMObjectType<Exclude<T["_tag"], undefined>> & Revision;
+type ResultType<T extends IDMObjectType<string>, FieldTypes extends keyof T> = Pick<T, FieldTypes> &
+  IDMObjectType<Exclude<T["_tag"], undefined>> &
+  Revision;
 type QueryFilterTypesafeParams<T extends IDMObjectType<string>> = { filter: Filter<T> };
 type QueryFilterExtended<T extends IDMObjectType<string>> = QueryFilter | (QueryFilterTypesafeParams<T> & QueryOpts);
 
@@ -27,13 +29,20 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
   constructor(readonly type: Exclude<T["_tag"], undefined>) {}
 
   public read<F extends Fields<T>>(id: string, options: { readonly params?: object; readonly fields: [F, ...F[]] }): ResultType<T, F> | null;
-  public read<F extends Fields<T>>(id: string, options: { readonly params?: object; readonly unCheckedFields: string[] }): T & Revision | null;
-  public read<F extends Fields<T>>(id: string, options?: { readonly params?: object }): D & Revision | null;
-  public read<F extends Fields<T>>(id: string, { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}) {
+  public read<F extends Fields<T>>(id: string, options: { readonly params?: object; readonly unCheckedFields: string[] }): (T & Revision) | null;
+  public read<F extends Fields<T>>(id: string, options?: { readonly params?: object }): (D & Revision) | null;
+  public read<F extends Fields<T>>(
+    id: string,
+    { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}
+  ) {
     return openidm.read(`${this.type}/${id}`, params, unCheckedFields ? unCheckedFields : fields);
   }
 
-  public create<F extends Fields<T>>(newResourceId: string | null, content: WithOptionalId<T>, options: { readonly params?: object; readonly fields: F[] }): ResultType<T, F>;
+  public create<F extends Fields<T>>(
+    newResourceId: string | null,
+    content: WithOptionalId<T>,
+    options: { readonly params?: object; readonly fields: F[] }
+  ): ResultType<T, F>;
   public create<F extends Fields<T>>(
     newResourceId: string | null,
     content: WithOptionalId<T>,
@@ -48,8 +57,18 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
     return openidm.create(this.type, newResourceId, content, params, unCheckedFields ? unCheckedFields : fields);
   }
 
-  public patch<F extends Fields<T>>(id: string, rev: string | null, value: PatchOpts[], options: { readonly params?: object; readonly fields: F[] }): ResultType<T, F>;
-  public patch<F extends Fields<T>>(id: string, rev: string | null, value: PatchOpts[], options: { readonly params?: object; readonly unCheckedFields: F[] }): T & Revision;
+  public patch<F extends Fields<T>>(
+    id: string,
+    rev: string | null,
+    value: PatchOpts[],
+    options: { readonly params?: object; readonly fields: F[] }
+  ): ResultType<T, F>;
+  public patch<F extends Fields<T>>(
+    id: string,
+    rev: string | null,
+    value: PatchOpts[],
+    options: { readonly params?: object; readonly unCheckedFields: F[] }
+  ): T & Revision;
   public patch<F extends Fields<T>>(id: string, rev: string | null, value: PatchOpts[], options?: { readonly params?: object }): D & Revision;
   public patch<F extends Fields<T>>(
     id: string,
@@ -60,7 +79,12 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
     return openidm.patch(`${this.type}/${id}`, rev, value, params, unCheckedFields ? unCheckedFields : fields);
   }
 
-  public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, options: { readonly params?: object; readonly fields: F[] }): ResultType<T, F>;
+  public update<F extends Fields<T>>(
+    id: string,
+    rev: string | null,
+    value: WithOptionalId<T>,
+    options: { readonly params?: object; readonly fields: F[] }
+  ): ResultType<T, F>;
   public update<F extends Fields<T>>(
     id: string,
     rev: string | null,
@@ -78,7 +102,11 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
   }
 
   public delete<F extends Fields<T>>(id: string, rev: string | null, options: { readonly params?: object; readonly fields: F[] }): ResultType<T, F>;
-  public delete<F extends Fields<T>>(id: string, rev: string | null, options: { readonly params?: object; readonly unCheckedFields: F[] }): T & Revision;
+  public delete<F extends Fields<T>>(
+    id: string,
+    rev: string | null,
+    options: { readonly params?: object; readonly unCheckedFields: F[] }
+  ): T & Revision;
   public delete<F extends Fields<T>>(id: string, rev: string | null, options?: { readonly params?: object }): D & Revision;
   public delete<F extends Fields<T>>(
     id: string,
@@ -91,7 +119,10 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
   public query<F extends Fields<T>>(params: QueryFilterExtended<T>, options: { readonly fields: F[] }): QueryResult<ResultType<T, F>>;
   public query<F extends Fields<T>>(params: QueryFilterExtended<T>, options: { readonly unCheckedFields: string[] }): QueryResult<T & Revision>;
   public query<F extends Fields<T>>(params: QueryFilterExtended<T>): QueryResult<D & Revision>;
-  public query<F extends Fields<T>>(params: QueryFilterExtended<T>, { fields, unCheckedFields }: { readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}) {
+  public query<F extends Fields<T>>(
+    params: QueryFilterExtended<T>,
+    { fields, unCheckedFields }: { readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}
+  ) {
     return openidm.query(this.type, this.flattenFilter(params), unCheckedFields ? unCheckedFields : fields);
   }
 
@@ -126,4 +157,5 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
   }
 }
 
-export const idmObject = <T extends IDMObjectType<string>, D extends IDMObjectType<string>>(type: Exclude<T["_tag"], undefined>) => new IDMObject<T, D>(type);
+export const idmObject = <T extends IDMObjectType<string>, D extends IDMObjectType<string>>(type: Exclude<T["_tag"], undefined>) =>
+  new IDMObject<T, D>(type);
