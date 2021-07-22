@@ -43,7 +43,7 @@
   "dependencies": {
     "camelcase": "^5.3.1",
     "config": "^3.2.2",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "nunjucks": "^3.2.2"
   },
   "bin": {
