@@ -105,7 +105,7 @@ const prepareValue = (val: unknown): string => {
   } else {
     return (val as any)?.toString() ?? "''";
   }
-}
+};
 
 export const interpretToFilter = <A>(dsl: Filter<A>): string => {
   switch (dsl.kind) {

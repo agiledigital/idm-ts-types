@@ -112,6 +112,11 @@ function convertType(props, propName, originalObjectName, tsTypeName, subTypes) 
       let relTypes = filterResourceCollection(props.resourceCollection)
         .map(mo => generateManagedTypeName(mo.path.replace("managed/", "")))
         .join(" | ");
+      if (!relTypes) {
+        relTypes = `Record<string, ${managedObjectValueType}>`;
+        const otherTypes = props.resourceCollection.map(obj => obj.path).join(", ");
+        console.warn(`Unable to find managed object type(s) for ${propName}, specified types are [${otherTypes}], falling back to ${relTypes}`);
+      }
       type = `ReferenceType<${relTypes}>`;
       break;
     default:
