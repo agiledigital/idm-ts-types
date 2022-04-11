@@ -18,12 +18,22 @@ interface HashedValue {}
 
 type HashAlgorithm = "SHA-256" | "SHA-384" | "SHA-512" | "Bcrypt" | "Scrypt" | "PBKDF2";
 
-type PatchOperation = "add" | "remove" | "replace" | "increment";
+type PatchRemoveOperation = "remove"
+type PatchValueOperation = "add" | "replace" | "increment" | "transform";
+type PatchFromOperation = "copy" | "move";
+type PatchOperation = PatchValueOperation | PatchRemoveOperation | PatchFromOperation;
 
 type PatchOpts = {
-  operation: PatchOperation;
+  operation: PatchValueOperation;
   field: string;
   value: any;
+} | {
+  operation: PatchRemoveOperation;
+  field: string;
+} | {
+  operation: PatchFromOperation;
+  from: string;
+  field: string;
 };
 
 type Action = "CREATE" | "UPDATE" | "DELETE" | "LINK" | "UNLINK" | "EXCEPTION" | "IGNORE" | "REPORT" | "NOREPORT" | "ASYNC";
