@@ -37,6 +37,11 @@ type PatchOpts = {
   field: string;
 };
 
+/**
+ * These are the valid actions available to a particulation situation during synchronization.
+ *
+ * @see https://backstage.forgerock.com/docs/idm/7.1/synchronization-guide/sync-actions.html#sync-actions
+ */
 type Action = "CREATE" | "UPDATE" | "DELETE" | "LINK" | "UNLINK" | "EXCEPTION" | "IGNORE" | "REPORT" | "NOREPORT" | "ASYNC";
 
 interface OpenIDM {
