@@ -30,6 +30,7 @@ type PatchOpts = {
 } | {
   operation: PatchRemoveOperation;
   field: string;
+  value?: any;
 } | {
   operation: PatchFromOperation;
   from: string;
