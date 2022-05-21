@@ -98,7 +98,7 @@ export const anyOf = <A>(...dsl: Filter<A>[]): Filter<A> => dsl.reduce((p, c) =>
 // this returns true if any are true.
 export const oneOf = <A, K extends keyof A>(field: keyof A, ...vals: A[K][]): Filter<A> => anyOf(...vals.map(x => equals(field, x)));
 
-const escapeQuotes = (str: string): string => str.replace("'", "\\'");
+const escapeQuotes = (str: string): string => str.replace(/'/g, "\\'");
 const prepareValue = (val: unknown): string => {
   if (typeof val === "string") {
     return `'${escapeQuotes(val ?? "")}'`;
