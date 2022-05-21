@@ -96,12 +96,9 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
     value: CompositePatchOpts<T>,
     { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}
   ) {
-    let patchValues: PatchOpts[];
-    if (this.isCombinedPatchOpts(value)){
-      patchValues = [...value.unCheckedPatches, ...value.checkedPatches ?? []]
-    } else {
-      patchValues = value
-    }
+    const patchValues = this.isCombinedPatchOpts(value)
+      ? [...value.unCheckedPatches, ...value.checkedPatches ?? []]
+      : value;
     return openidm.patch(`${this.type}/${id}`, rev, patchValues, params, unCheckedFields ? unCheckedFields : fields);
   }
 
