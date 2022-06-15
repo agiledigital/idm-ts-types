@@ -173,9 +173,11 @@ function generateConnectorTypes(idmConfigDir, subConnectorTypes) {
       // Resolve the path preferring the current working directory
       connectorObject = require(path.resolve(conn));
     } catch (err) {
-      var newErr = Error("Failed to load connector file [" + conn + "]");
-      newErr.stack += "\nCaused by: " + err.stack;
-      throw newErr;
+      if (err instanceof Error) {
+        var newErr = Error("Failed to load connector file [" + conn + "]");
+        newErr.stack += "\nCaused by: " + err.stack;
+        throw newErr;
+      } 
     }
 
     const match = provisionerRegex.exec(conn);
@@ -231,9 +233,11 @@ function generateManagedTypes(idmConfigDir, subManagedTypes) {
     // Resolve the path preferring the current working directory
     managedObjects = require(path.resolve(managedObjectsFile));
   } catch (err) {
-    var newErr = Error("Failed to load managed objects file [" + managedObjectsFile + "]");
-    newErr.stack += "\nCaused by: " + err.stack;
-    throw newErr;
+    if (err instanceof Error) {
+      var newErr = Error("Failed to load managed objects file [" + managedObjectsFile + "]");
+      newErr.stack += "\nCaused by: " + err.stack;
+      throw newErr;
+    }
   }
   const idmTypes = managedObjects.objects.sort(compareName).map(mo => {
     const managedTypeName = generateManagedTypeName(mo.name);

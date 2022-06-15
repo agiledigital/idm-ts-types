@@ -117,13 +117,13 @@ export const interpretToFilter = <A>(dsl: Filter<A>): string => {
     case Kind.Contains:
     case Kind.StartsWith:
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      return `/${dsl.field} ${dsl.kind} ${prepareValue(dsl.val)}`;
+      return `/${dsl.field.toString()} ${dsl.kind} ${prepareValue(dsl.val)}`;
     case Kind.And:
     case Kind.Or:
       return `(${interpretToFilter(dsl.a)} ${dsl.kind} ${interpretToFilter(dsl.b)})`;
     case Kind.Presence:
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      return `/${dsl.field} ${dsl.kind}`;
+      return `/${dsl.field.toString()} ${dsl.kind}`;
     case Kind.Not:
       return `${dsl.kind}(${interpretToFilter(dsl.filter)})`;
     case Kind.True:
