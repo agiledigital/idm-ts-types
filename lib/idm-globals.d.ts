@@ -57,7 +57,7 @@ interface OpenIDM {
   isEncrypted: (value: any) => value is EncryptedValue;
   hash: (value: any, algorithm?: HashAlgorithm) => HashedValue;
   isHashed: (value: any) => value is HashedValue;
-  matches: (string: HashedValue, value: any) => boolean;
+  matches: (string: string, value: HashedValue) => boolean;
 }
 
 type Cookie = {};
