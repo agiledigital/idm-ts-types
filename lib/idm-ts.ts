@@ -11,6 +11,26 @@ type ResultType<T extends IDMObjectType<string>, FieldTypes extends keyof T> = P
 type QueryFilterTypesafeParams<T extends IDMObjectType<string>> = { filter: Filter<T> };
 type QueryFilterExtended<T extends IDMObjectType<string>> = QueryFilter | (QueryFilterTypesafeParams<T> & QueryOpts);
 
+export type CheckedPatchOpts<T> = {
+  operation: PatchValueOperation;
+  field: Fields<T>;
+  value: any;
+} | {
+  operation: PatchRemoveOperation;
+  field: Fields<T>;
+  value?: any;
+} | {
+  operation: PatchFromOperation;
+  from: string;
+  field: Fields<T>;
+};
+
+type CombinedPatchOpts<T> = { 
+  readonly checkedPatches?: CheckedPatchOpts<T>[];
+  readonly unCheckedPatches: PatchOpts[];
+}
+type CompositePatchOpts<T> = CheckedPatchOpts<T>[] | CombinedPatchOpts<T>
+
 export type WithOptionalId<A extends { _id: string }> = Omit<A, "_id"> & {
   _id?: string;
 };
@@ -60,23 +80,26 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
   public patch<F extends Fields<T>>(
     id: string,
     rev: string | null,
-    value: PatchOpts[],
+    value: CompositePatchOpts<T>,
     options: { readonly params?: object; readonly fields: F[] }
   ): ResultType<T, F>;
   public patch<F extends Fields<T>>(
     id: string,
     rev: string | null,
-    value: PatchOpts[],
+    value: CompositePatchOpts<T>,
     options: { readonly params?: object; readonly unCheckedFields: F[] }
   ): T & Revision;
-  public patch<F extends Fields<T>>(id: string, rev: string | null, value: PatchOpts[], options?: { readonly params?: object }): D & Revision;
+  public patch<F extends Fields<T>>(id: string, rev: string | null, value: CompositePatchOpts<T>, options?: { readonly params?: object }): D & Revision;
   public patch<F extends Fields<T>>(
     id: string,
     rev: string | null,
-    value: PatchOpts[],
+    value: CompositePatchOpts<T>,
     { params, fields, unCheckedFields }: { readonly params?: object; readonly fields?: F[]; readonly unCheckedFields?: string[] } = {}
   ) {
-    return openidm.patch(`${this.type}/${id}`, rev, value, params, unCheckedFields ? unCheckedFields : fields);
+    const patchValues = this.isCombinedPatchOpts(value)
+      ? [...value.unCheckedPatches, ...value.checkedPatches ?? []]
+      : value;
+    return openidm.patch(`${this.type}/${id}`, rev, patchValues, params, unCheckedFields ? unCheckedFields : fields);
   }
 
   public update<F extends Fields<T>>(
@@ -154,6 +177,10 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
     } else {
       return params;
     }
+  }
+
+  private isCombinedPatchOpts(value: CompositePatchOpts<T>): value is CombinedPatchOpts<T> {
+    return (value as CombinedPatchOpts<T>)?.unCheckedPatches !== undefined
   }
 }
 

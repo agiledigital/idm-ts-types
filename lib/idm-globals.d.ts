@@ -18,14 +18,30 @@ interface HashedValue {}
 
 type HashAlgorithm = "SHA-256" | "SHA-384" | "SHA-512" | "Bcrypt" | "Scrypt" | "PBKDF2";
 
-type PatchOperation = "add" | "remove" | "replace" | "increment";
+type PatchRemoveOperation = "remove"
+type PatchValueOperation = "add" | "replace" | "increment" | "transform";
+type PatchFromOperation = "copy" | "move";
+type PatchOperation = PatchValueOperation | PatchRemoveOperation | PatchFromOperation;
 
 type PatchOpts = {
-  operation: PatchOperation;
+  operation: PatchValueOperation;
   field: string;
   value: any;
+} | {
+  operation: PatchRemoveOperation;
+  field: string;
+  value?: any;
+} | {
+  operation: PatchFromOperation;
+  from: string;
+  field: string;
 };
 
+/**
+ * These are the valid actions available to a particular situation during synchronization.
+ *
+ * @see https://backstage.forgerock.com/docs/idm/7.1/synchronization-guide/sync-actions.html#sync-actions
+ */
 type Action = "CREATE" | "UPDATE" | "DELETE" | "LINK" | "UNLINK" | "EXCEPTION" | "IGNORE" | "REPORT" | "NOREPORT" | "ASYNC";
 
 interface OpenIDM {
@@ -41,7 +57,7 @@ interface OpenIDM {
   isEncrypted: (value: any) => value is EncryptedValue;
   hash: (value: any, algorithm?: HashAlgorithm) => HashedValue;
   isHashed: (value: any) => value is HashedValue;
-  matches: (string: HashedValue, value: any) => boolean;
+  matches: (string: string, value: HashedValue) => boolean;
 }
 
 type Cookie = {};
