@@ -48,7 +48,51 @@ export type ReferenceType<T> = Partial<T> & {
 export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<string>> {
   constructor(readonly type: Exclude<T["_tag"], undefined>) {}
 
+  /**
+   * Reads and returns a resource object with type checked fields in the options.
+   * 
+   * Checked fields are limited to only the direct fields on the resource and do not support:
+   * * Wildcards eg `*` or `*_ref`
+   * * Navigating relationships eg `manager/givenName`
+   * 
+   * @example
+   * Reads a managed object with specific known fields, if the fields are deleted or renamed this code would no longer compile
+   * ```ts
+   * const user = idm.managed.user.read("<managedUserId>", { fields: ["userName", "givenName"] })
+   * 
+   * // This works
+   * let name = user.givenName
+   * 
+   * // This doesn't compile because the type has been narrowed to the selected fields and mail isn't one of the selected fields
+   * let mail = user.mail
+   * ```
+   * 
+   * @example
+   * Doesn't compile because of misspelling in `userName`
+   * ```ts
+   * idm.managed.user.read("<managedUserId>", { fields: ["userNome", "givenName"] })
+   * ```
+   * 
+   * @param id - The resource id of the object
+   * @param options - Options object which must contain an array of checked fields
+   * @returns The object with its type narrowed to given fields in the options
+   */
   public read<F extends Fields<T>>(id: string, options: { readonly params?: object; readonly fields: [F, ...F[]] }): ResultType<T, F> | null;
+  
+  /**
+   * Reads and returns a resource object with unchecked fields in the options.
+   * 
+   * This unchecked version is essentially an escape hatch to the checked version above. The following circumstances must use an escape hatch 
+   * 
+   * @example
+   * Reads a managed object with an escape 
+   * ```ts
+   * idm.managed.user.read("<managedUserId>", { fields: ["userName", "givenName"] })
+   * ```
+   * 
+   * @param id - The resource id of the object
+   * @param options - Options object which must contain an array of checked fields
+   */
   public read<F extends Fields<T>>(id: string, options: { readonly params?: object; readonly unCheckedFields: string[] }): (T & Revision) | null;
   public read<F extends Fields<T>>(id: string, options?: { readonly params?: object }): (D & Revision) | null;
   public read<F extends Fields<T>>(
