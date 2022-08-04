@@ -39,13 +39,33 @@ type PatchOpts = {
 
 /**
  * These are the valid actions available to a particular situation during synchronization.
+ * 
+ * * `CREATE` - Create and link a target object.
+ * * `UPDATE` - Link and update a target object.
+ * * `DELETE` - Delete and unlink the target object.
+ * * `LINK` - Link the correlated target object.
+ * * `UNLINK` - Unlink the linked target object.
+ * * `EXCEPTION` - Flag the link situation as an exception.
+ * > _Important_
+ * >
+ * > Do not use this action for liveSync mappings.
+ * > 
+ * > In the context of liveSync, the EXCEPTION action triggers the liveSync failure handler, and the operation is retried in accordance with the configured retry policy. This is not useful because the operation will never succeed. If the configured number of retries is high, these pointless retries can continue for a long period of time.
+ * > 
+ * > If the maximum number of retries is exceeded, the liveSync operation terminates and does not continue processing the entry that follows the failed (EXCEPTION) entry. LiveSync is only resumed at the next liveSync polling interval.
+ * > 
+ * > This behavior differs from reconciliation, where a failure to synchronize a single source-target association does not fail the entire reconciliation.
+ * * `IGNORE` - Do not change the link or target object state.
+ * * `REPORT` - Do not perform any action but report what would happen if the default action were performed.
+ * * `NOREPORT` - Do not perform any action or generate any report.
+ * * `ASYNC` - An asynchronous process has been started, so do not perform any action or generate any report.
  *
- * @see https://backstage.forgerock.com/docs/idm/7.1/synchronization-guide/sync-actions.html#sync-actions
+ * @see https://backstage.forgerock.com/docs/idm/7.2/synchronization-guide/sync-actions.html#sync-actions
  */
 type Action = "CREATE" | "UPDATE" | "DELETE" | "LINK" | "UNLINK" | "EXCEPTION" | "IGNORE" | "REPORT" | "NOREPORT" | "ASYNC";
 
 /**
- * IDM scripted functions.
+ * Functions (access to managed objects, system objects, and configuration objects) within IDM are accessible to scripts via the `openidm` object, which is included in the top-level scope provided to each script.
  * 
  @see https://backstage.forgerock.com/docs/idm/7.2/scripting-guide/scripting-func-ref.html
  */
@@ -140,6 +160,19 @@ interface OpenIDM {
    */
   patch: (resourceName: string, rev: string | null, value: PatchOpts[], params?: object | null, fields?: string[]) => Result;
 
+  /**
+   * This function reads and returns a resource object.
+   * 
+   * @example
+   * ```javascript
+   * openidm.read("managed/user/"+userId, null, ["*", "manager"]);
+   * ```
+   * 
+   * @param resourceName - The full path to the object to be read, including the ID.
+   * @param params - The parameters that are passed to the read request. Generally, no additional parameters are passed to a read request, but this might differ, depending on the request. If you need to specify a list of `fields` as a third parameter, and you have no additional `params` to pass, you must pass `null` here. Otherwise, you simply omit both parameters.
+   * @param fields - An array of the fields that should be returned in the result. The list of fields can include wild cards, such as `*` or `*_ref`. If no fields are specified, the entire object is returned.
+   * @returns The resource object, or `null` if not found.
+   */
   read: (resourceName: string, params?: object | null, fields?: string[]) => Result | null;
   update: (resourceName: string, rev: string | null, value: object, params?: object | null, fields?: string[]) => Result;
   delete: (resourceName: string, rev?: string | null, params?: object | null, fields?: string[]) => Result;
