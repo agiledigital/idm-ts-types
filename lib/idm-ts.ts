@@ -82,18 +82,35 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
   /**
    * Reads and returns a resource object with unchecked fields in the options.
    * 
-   * This unchecked version is essentially an escape hatch to the checked version above. The following circumstances must use an escape hatch 
+   * This unchecked version is essentially an escape hatch to the checked version above. The following circumstances must use an escape hatch:
+   * 1. Wildcards such as `*_ref`, `*` or `manager/*`
+   * 2. Relationship fields such as `manager/givenName` or "reports/*&#47;givenName"
    * 
    * @example
-   * Reads a managed object with an escape 
+   * Reads a managed object using un-checked fields
    * ```ts
-   * idm.managed.user.read("<managedUserId>", { fields: ["userName", "givenName"] })
+   * idm.managed.user.read("<managedUserId>", { unCheckedFields: ["givenName", "manager/*"] })
    * ```
    * 
    * @param id - The resource id of the object
    * @param options - Options object which must contain an array of checked fields
+   * @returns The object with its type allowing all fields as TypeScript won't know which fields you have chosen
    */
   public read<F extends Fields<T>>(id: string, options: { readonly params?: object; readonly unCheckedFields: string[] }): (T & Revision) | null;
+  
+  /**
+   * Reads and returns a resource object with the default fields.
+   * 
+   * @example
+   * Reads a managed object with an escape 
+   * ```ts
+   * idm.managed.user.read("<managedUserId>")
+   * ```
+   * 
+   * @param id - The resource id of the object.
+   * @param options - Options object which can contain params, but no fields.
+   * @returns The object with its type narrowed to the default fields for the object.
+   */
   public read<F extends Fields<T>>(id: string, options?: { readonly params?: object }): (D & Revision) | null;
   public read<F extends Fields<T>>(
     id: string,
