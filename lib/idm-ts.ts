@@ -75,7 +75,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    * 
    * @param id - The resource id of the object
    * @param options - Options object which must contain an array of checked fields
-   * @returns The object with its type narrowed to given fields in the options
+   * @returns The object with its type narrowed to given fields in the options  or `null` if not found.
    */
   public read<F extends Fields<T>>(id: string, options: { readonly params?: object; readonly fields: [F, ...F[]] }): ResultType<T, F> | null;
   
@@ -94,7 +94,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    * 
    * @param id - The resource id of the object
    * @param options - Options object which must contain an array of checked fields
-   * @returns The object with its type allowing all fields as TypeScript won't know which fields you have chosen
+   * @returns The object with its type allowing all fields as TypeScript won't know which fields you have chosen or `null` if not found.
    */
   public read<F extends Fields<T>>(id: string, options: { readonly params?: object; readonly unCheckedFields: string[] }): (T & Revision) | null;
   
@@ -109,7 +109,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    * 
    * @param id - The resource id of the object.
    * @param options - Options object which can contain params, but no fields.
-   * @returns The object with its type narrowed to the default fields for the object.
+   * @returns The object with its type narrowed to the default fields for the object or `null` if not found.
    */
   public read<F extends Fields<T>>(id: string, options?: { readonly params?: object }): (D & Revision) | null;
   public read<F extends Fields<T>>(
