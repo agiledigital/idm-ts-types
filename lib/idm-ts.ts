@@ -54,6 +54,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    * Checked fields are limited to only the direct fields on the resource and do not support:
    * * Wildcards eg `*` or `*_ref`
    * * Navigating relationships eg `manager/givenName`
+   * * Leading slashes eg `/givenName`
    * 
    * @example
    * Reads a managed object with specific known fields, if the fields are deleted or renamed this code would no longer compile
@@ -122,6 +123,11 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
   /**
    * This function creates a new resource object returning the newly created object with only the specified fields and the type narrowed accordingly.
    * 
+   * Checked fields are limited to only the direct fields on the resource and do not support:
+   * * Wildcards eg `*` or `*_ref`
+   * * Navigating relationships eg `manager/givenName`
+   * * Leading slashes eg `/givenName`
+   * 
    * @example
    * ```ts
    * idm.managed.user.create(
@@ -133,7 +139,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    * 
    * @param newResourceId - The identifier of the object to be created, if the client is supplying the ID. If the server should generate the ID, pass null here.
    * @param content - The content of the object to be created.
-   * @param options - Options object which must contain an array of checked field
+   * @param options - Options object which must contain an array of checked fields.
    * @returns The created resource object with it's type narrowed to the specified fields.
    */
   public create<F extends Fields<T>>(
@@ -143,7 +149,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
   ): ResultType<T, F>;
 
   /**
-   * This function creates a new resource object returning the newly created object with only the specified unchecked fields.
+   * This function creates a new resource object returning the newly created object with only the specified unchecked fields. The resulting type contains all possible fields as TypeScript isn't able to figure out which fields should be returned.
    * 
    * This unchecked version is essentially an escape hatch to the checked version above. The following circumstances must use an escape hatch:
    * 1. Wildcards such as `*_ref`, `*` or `manager/*`
@@ -197,6 +203,11 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
 
   /**
    * This function performs a partial modification of a managed or system object. Unlike the update function, only the modified attributes are provided, not the entire object. It returns the modified object with only the specified fields and the type narrowed accordingly.
+   * 
+   * Checked fields are limited to only the direct fields on the resource and do not support:
+   * * Wildcards eg `*` or `*_ref`
+   * * Navigating relationships eg `manager/givenName`
+   * * Leading slashes eg `/givenName`
    * 
    * @example
    * A `remove` operation removes a property if the value of that property equals the specified value, or if no value is specified in the request. The following example `value` removes the `marital_status` property from the object, if the value of that property is `single`:
@@ -533,18 +544,85 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
     return openidm.patch(`${this.type}/${id}`, rev, patchValues, params, unCheckedFields ? unCheckedFields : fields);
   }
 
+  /**
+   * This function updates an entire resource object returning the updated object with only the specified fields and the type narrowed accordingly.
+   * 
+   * Checked fields are limited to only the direct fields on the resource and do not support:
+   * * Wildcards eg `*` or `*_ref`
+   * * Navigating relationships eg `manager/givenName`
+   * * Leading slashes eg `/givenName`
+   * 
+   * @example
+   * ```ts
+   * idm.managed.user.update(
+   *  "<managedUserId>",
+   *  { userName: "abc123", givenName: "Babs", sn: "Jansen", mail: "babs@babs.com"},
+   *  { fields: ["userName", "givenName"] }
+   * )
+   * ```
+   * 
+   * @param id - The identifier of the object to be updated
+   * @param rev - The revision of the object to be updated. Use `null` if the object is not subject to revision control, or if you want to skip the revision check and update the object, regardless of the revision.
+   * @param value - The complete replacement object.
+   * @param options Options object which must contain an array of checked fields.
+   * @returns The updated resource object with it's type narrowed to the specified fields.
+   */
   public update<F extends Fields<T>>(
     id: string,
     rev: string | null,
     value: WithOptionalId<T>,
     options: { readonly params?: object; readonly fields: F[] }
   ): ResultType<T, F>;
+
+
+  /**
+   * This function updates an entire resource object returning the updated object with only the specified unchecked fields. The resulting type contains all possible fields as TypeScript isn't able to figure out which fields should be returned.
+   * 
+   * This unchecked version is essentially an escape hatch to the checked version above. The following circumstances must use an escape hatch:
+   * 1. Wildcards such as `*_ref`, `*` or `manager/*`
+   * 2. Relationship fields such as `manager/givenName` or "reports/*&#47;givenName"
+   * 
+   * @example
+   * ```ts
+   * idm.managed.user.update(
+   *  "<managedUserId>",
+   *  { userName: "abc123", givenName: "Babs", sn: "Jansen", mail: "babs@babs.com"},
+   *  { unCheckedFields: ["*"] }
+   * )
+   * ```
+   * 
+   * @param id - The identifier of the object to be updated
+   * @param rev - The revision of the object to be updated. Use `null` if the object is not subject to revision control, or if you want to skip the revision check and update the object, regardless of the revision.
+   * @param value - The complete replacement object.
+   * @param options - Options object which must contain an array of unchecked fields.
+   * @returns The updated resource object with it's type allowing all fields as TypeScript won't know which fields you have chosen.
+   */
   public update<F extends Fields<T>>(
     id: string,
     rev: string | null,
     value: WithOptionalId<T>,
     options: { readonly params?: object; readonly unCheckedFields: string[] }
   ): T & Revision;
+
+  /**
+   * This function updates an entire resource object returning the newly created object with the default fields.
+   * 
+   * 
+   * @example
+   * ```ts
+   * idm.managed.user.update(
+   *  "<managedUserId>",
+   *  { userName: "abc123", givenName: "Babs", sn: "Jansen", mail: "babs@babs.com"},
+   *  { fields: ["userName", "givenName"] }
+   * )
+   * ```
+   * 
+   * @param id - The identifier of the object to be updated
+   * @param rev - The revision of the object to be updated. Use `null` if the object is not subject to revision control, or if you want to skip the revision check and update the object, regardless of the revision.
+   * @param value - The complete replacement object.
+   * @param options Options object which must contain an array of checked fields.
+   * @returns The updated resource object with it's type narrowed to the default fields.
+   */
   public update<F extends Fields<T>>(id: string, rev: string | null, value: WithOptionalId<T>, options?: { readonly params?: object }): D & Revision;
   public update<F extends Fields<T>>(
     id: string,
