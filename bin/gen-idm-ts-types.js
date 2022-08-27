@@ -128,7 +128,7 @@ function convertType(props, propName, originalObjectName, tsTypeName, subTypes) 
 }
 
 function calcReturnByDefault(prop) {
-  if (prop.returnByDefault) {
+  if (prop.returnByDefault !== undefined) {
     return prop.returnByDefault;
   } else {
     if (prop.type === "relationship") {
