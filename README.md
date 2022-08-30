@@ -208,11 +208,11 @@ So when used in an example you can simply navigate into the object like this:
 
 ### Relationships
 
-Fields that are [relationships](#relationships) simply use the target relationship as the type wrapped in a `ReferenceType`. It gracefully degrades when it can't find the target type to the `Record` type, this usually happens when referencing `internal` types which are not present in `managed.json`.
+Fields that are [relationships](#relationships) simply use the target relationship as the type wrapped in a `ReferenceType`. It gracefully degrades to the `Record` type when it can't find the target type, this usually happens when referencing `internal` types which are not present in `managed.json`.
 
 The code generation also understands relationships, and it uses the target relationship as the type wrapped in a generic `ReferenceType<T>`, for example `ReferenceType<ManagedUser>`. 
 
-See the manager relationship which is a self-reference.
+See the manager relationship which is a self-reference back to `managed/user`.
 
 ```json
 "manager" : {
@@ -239,6 +239,7 @@ See the manager relationship which is a self-reference.
 
 ```
 
+Which ends up with generated code such as:
 
 ```typescript
 export type ManagedUserNonDefaults = {
@@ -278,40 +279,82 @@ Currently, user customisable relationship fields that are part of `_refPropertie
 
 Which defines `_grantType`, but the code generation won't create a type with `_grantType` in it. Perhaps in the future this scenario will be supported if there is interest.
 
+Additionally, when using relationships and specifying which fields should be returned isn't supported when using [automatic type narrowing](#automatic-type-narrowing) as the type narrowing doesn't support forward slashes (eg `manager/givenName`), more information is at [field name limitations](#field-name-limitations).
+
 ## Type-safe Wrapper Functions
 
-Compare `openidm` functions vs wrapper functions.
+During code generation an addition object called `idm` is generated. The `idm` object is an extension of the built-in `openidm` object, but with wrappers added for all `managed` objects and connectors (`system`) objects.
 
-The code generation also generates wrapper functions for all the managed objects and connectors. This is where the power of the types really shines.
+These wrapper functions are where the power of the types really shines. As seen in the animation below, VS Code is able to auto-complete managed objects and connectors, as well as showing the fields available including any description/title. 
 
 ![](assets/animations/wrapper-overview.gif)
+
+This is an example of a snippet from the bottom of the generated types where the wrapper functions are stored.
 
 ```typescript
 export const idm = {
   ...openidm,
   managed: {
-    SubTypeTest: idmObject<ManagedSubTypeTest, ManagedSubTypeTestDefaults>("managed/SubTypeTest"),
     assignment: idmObject<ManagedAssignment, ManagedAssignmentDefaults>("managed/assignment"),
-    pendingRelationships: idmObject<ManagedPendingRelationships, ManagedPendingRelationshipsDefaults>("managed/pendingRelationships"),
     role: idmObject<ManagedRole, ManagedRoleDefaults>("managed/role"),
     user: idmObject<ManagedUser, ManagedUserDefaults>("managed/user")
   },
   system: {
     scimAccount: idmObject<SystemScimAccount, SystemScimAccount>("system/scim/account"),
-    scimGroup: idmObject<SystemScimGroup, SystemScimGroup>("system/scim/group"),
-    usersWithManagersAccount: idmObject<SystemUsersWithManagersAccount, SystemUsersWithManagersAccount>("system/UsersWithManagers/__ACCOUNT__")
+    scimGroup: idmObject<SystemScimGroup, SystemScimGroup>("system/scim/group")
   }
 };
 ```
 
-Show examples of all the main functions:
+When navigating through object type, eg `user`, `role`, etc. The same core functions (`create`/`update`/`patch`/`delete`/`query`) are available, with a few key differences:
 
-* create
-* update
-* patch
-* delete
-* relationship
-* query
+1. The name of the type is not required, as this is defined as part of the function call context. For example, using `openidm` reading a managed user identifier of `abc123` looks like:
+      ```typescript
+      openidm.read("managed/user/abc123")
+      ```
+    Whereas with the wrapper it is instead:
+
+      ```typescript
+      idm.managed.user("abc123")
+      ```
+    In addition to general code completion assistance it also means if the managed user object is deleted or renamed then the code no longer compiles, giving your code extra integrity.
+
+2. The return type of the function is the actual object type instead of a generic result type, or query response type. This also makes for robust code, as if a particular property doesn't exist then the code won't compile, for example, using the regular function typo's won't be detected:
+      ```typescript
+      const user = openidm.read("managed/user/abc123")
+      // givenName spelt wrong, compiles fine, but breaks at runtime
+      user.givonName
+      ```
+    Whereas with the wrapper it is instead:
+
+      ```typescript
+      const user = idm.managed.user("abc123")
+      // Will fail to compile
+      user.givonName
+      ```
+3. [Automatic type narrowing](#automatic-type-narrowing) is a really useful feature where you specify which fields you want back, and the resulting Typescript type knows that only those types are available. More details on this [below](#automatic-type-narrowing).
+4. [Type safe query filter DSL](#query-filter-dsl) generates the `_queryFilter` in a type safe way, which prevents query syntax errors from being possible, as well as making it easier to build complex queries while still being readable. More on this [below](#query-filter-dsl).
+5. The functions are overloaded with three variations which handle the fields in the returned object in different ways:
+   1. A version that leverages the [type narrowing](#automatic-type-narrowing) and returns a narrowed type.
+   2. A version that uses "unchecked fields" due to [type narrowing field name limitations](#field-name-limitations) which returns a type that has all possible fields.
+   3. A version that where no fields are specified so only the "return by default" fields are available in the returned type.
+
+
+There is one additional function that is not present in the `openidm` function called `relationship`. This is a convenience function that can build a relationship reference in a type safe manner.
+
+For example instead of having to manually write:
+
+```json
+{
+  "_ref": "managed/user/babs"
+}
+```
+   
+You would instead write:
+
+```typescript
+idm.managed.user.relationship("babs")
+```
 
 ## Query Filter DSL
 
