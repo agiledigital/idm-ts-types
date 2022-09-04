@@ -22,6 +22,9 @@
       - [Relationship Limitations](#relationship-limitations)
   - [Type-safe Wrapper Functions](#type-safe-wrapper-functions)
   - [Query Filter DSL](#query-filter-dsl)
+    - [Query Filter Functions](#query-filter-functions)
+      - [Standard Built-in Equivalent Functions](#standard-built-in-equivalent-functions)
+    - [Additional Query Helper Functions](#additional-query-helper-functions)
   - [Type-safe Patches](#type-safe-patches)
   - [Automatic type narrowing](#automatic-type-narrowing)
     - [Field Name Limitations](#field-name-limitations)
@@ -344,8 +347,8 @@ There is one additional function that is not present in the `openidm` function c
 
 For example instead of having to manually write:
 
-```json
-{
+```javascript
+user.manager = {
   "_ref": "managed/user/babs"
 }
 ```
@@ -353,14 +356,94 @@ For example instead of having to manually write:
 You would instead write:
 
 ```typescript
-idm.managed.user.relationship("babs")
+user.manager = idm.managed.user.relationship("babs")
 ```
 
 ## Query Filter DSL
 
-Showcase the Query Filter DSL
+The query filter DSL is very powerful construct that allows building a query in a type safe manner. For example if field is deleted from your managed object and a query filter is referencing that field, normally you wouldn't notice it until run time. However, using the query filter DSL the query will no longer compile, saving you from bugs creeping into production unnoticed.
+
+Other benefits are field name completion and value type checking when writing queries. For example if you have a field called `numLoginFailures` that is of type `number`, it will ensure that when using the field in the query is a `number` and won't let you use a `string` by mistake.
+
+The following animation shows how to write a query using code completion as well as showcasing the `oneOf` function which is a shortcut way to field is one of multiple different values (like the SQL IN operator):
 
 ![](assets/animations/query-filter.gif)
+
+### Query Filter Functions
+
+#### Standard Built-in Equivalent Functions
+
+| Operator Name | Function Name | Example | Query Filter Equivalent |
+| --- | --- | --- | --- |
+| Equals | `equals` | `equals("accountStatus", "active")` | `/accountStatus eq "active"` |
+| Greater | `greater` | `greater("loginFailures", 5)` | `/loginFailures gt 5` |
+| Greater or Equal | `greaterOrEqual` | `greaterOrEqual("loginFailures", 6)` | `/loginFailures ge 6` |
+| Less | `less` | `less("loginFailures", 1)` | `/loginFailures lt 1` |
+| Less or Equal | `lessOrEqual` | `lessOrEqual("loginFailures", 0)` | `/loginFailures le 0` |
+| Contains | `contains` | `contains("mail", "gmail")` | `/mail co "gmail"` |
+| Starts With | `startsWith` | `startsWith("mail", "john@")` | `/mail sw "john@"` |
+| And | `and` | `and(equals("givenName", "John"), equals("sn", "Citizen"))` | `(/givenName eq "John" and /sn eq "Citizen")` |
+| Or | `or` | `or(equals("givenName", "John"), equals("givenName", "Mary"))` | `(/givenName eq "John" or /givenName eq "Mary")` |
+| Not | `not` | `not(presence("mail"))` | `!(/mail pr)` |
+| Presence | `presence` | `presence("mail")` | `/mail pr` |
+| True | `true` | `trueVal` | `trueVal()` |
+| False | `false` | `falseVal` | `falseVal()` |
+
+### Additional Query Helper Functions
+
+**`allOf`**
+
+The `allOf` function combines multiple filters returning true if all are true, i.e. it `and`'s all the filters together.
+
+For example, you can write:
+
+```typescript
+allOf(
+    equals("accountStatus", "active"),
+    equals("givenName", "John"),
+    equals("sn", "Citizen")
+)
+```
+
+Which is equivalent to:
+
+```
+((/accountStatus eq "active" and /givenName eq "John") and /sn eq "Citizen")
+```
+
+**`andOf`**
+
+The `andOf` function combines multiple filters returning true if any are true, i.e. it `or`'s all the filters together.
+
+```typescript
+anyOf(
+    equals("givenName", "John"),
+    equals("sn", "John"),
+    contains("mail", "john")
+)
+```
+
+Which is equivalent to:
+
+```
+((/givenName eq "John or /sn eq "John") or /mail co "john")
+
+```
+
+**`oneOf`**
+
+The `oneOf` function is essentially SQL's `IN` operator. Given a field and a collection of values this returns `true` if any are `true`.
+
+```typescript
+oneOf("givenName", "John", "Mary", "Jane")
+```
+
+Which is equivalent to:
+
+```
+((/givenName eq "John" or /givenName eq "Mary") or /givenName eq "Jane")
+```
+
 
 ## Type-safe Patches
 
