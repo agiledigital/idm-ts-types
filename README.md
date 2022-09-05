@@ -25,14 +25,12 @@
     - [Query Filter Functions](#query-filter-functions)
       - [Standard Built-in Equivalent Functions](#standard-built-in-equivalent-functions)
     - [Additional Query Helper Functions](#additional-query-helper-functions)
-  - [Type-safe Patches](#type-safe-patches)
+  - [Type safe Patches](#type-safe-patches)
   - [Automatic type narrowing](#automatic-type-narrowing)
     - [Field Name Limitations](#field-name-limitations)
   - [ForgeRock API Documentation](#forgerock-api-documentation)
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
-- [API Wrapper Documentation](#api-wrapper-documentation)
-- [TypeScript Code Generation Documentation](#typescript-code-generation-documentation)
 # Features
 
 ## TypeScript Type Code Generation
@@ -79,7 +77,7 @@ A snippet of a simple `managed.json` file:
 
 And a portion of the resulting Typescript type:
 
-```typescript
+```ts
 export type ManagedUserDefaults = {
   _tag?: "managed/user";
 
@@ -164,7 +162,7 @@ Complex Types are also supported, consented mappings is a good example.
 
 Which results in the following Typescript types:
 
-```typescript
+```ts
 /**
  * user Managed Object Non Default fields
  *
@@ -244,7 +242,7 @@ See the manager relationship which is a self-reference back to `managed/user`.
 
 Which ends up with generated code such as:
 
-```typescript
+```ts
 export type ManagedUserNonDefaults = {
   /**
    * Manager
@@ -294,7 +292,7 @@ These wrapper functions are where the power of the types really shines. As seen 
 
 This is an example of a snippet from the bottom of the generated types where the wrapper functions are stored.
 
-```typescript
+```ts
 export const idm = {
   ...openidm,
   managed: {
@@ -312,25 +310,25 @@ export const idm = {
 When navigating through object type, eg `user`, `role`, etc. The same core functions (`create`/`update`/`patch`/`delete`/`query`) are available, with a few key differences:
 
 1. The name of the type is not required, as this is defined as part of the function call context. For example, using `openidm` reading a managed user identifier of `abc123` looks like:
-      ```typescript
+      ```ts
       openidm.read("managed/user/abc123")
       ```
     Whereas with the wrapper it is instead:
 
-      ```typescript
+      ```ts
       idm.managed.user("abc123")
       ```
     In addition to general code completion assistance it also means if the managed user object is deleted or renamed then the code no longer compiles, giving your code extra integrity.
 
 2. The return type of the function is the actual object type instead of a generic result type, or query response type. This also makes for robust code, as if a particular property doesn't exist then the code won't compile, for example, using the regular function typo's won't be detected:
-      ```typescript
+      ```ts
       const user = openidm.read("managed/user/abc123")
       // givenName spelt wrong, compiles fine, but breaks at runtime
       user.givonName
       ```
     Whereas with the wrapper it is instead:
 
-      ```typescript
+      ```ts
       const user = idm.managed.user("abc123")
       // Will fail to compile
       user.givonName
@@ -355,7 +353,7 @@ user.manager = {
    
 You would instead write:
 
-```typescript
+```ts
 user.manager = idm.managed.user.relationship("babs")
 ```
 
@@ -397,7 +395,7 @@ The `allOf` function combines multiple filters returning true if all are true, i
 
 For example, you can write:
 
-```typescript
+```ts
 allOf(
     equals("accountStatus", "active"),
     equals("givenName", "John"),
@@ -415,7 +413,7 @@ Which is equivalent to:
 
 The `andOf` function combines multiple filters returning true if any are true, i.e. it `or`'s all the filters together.
 
-```typescript
+```ts
 anyOf(
     equals("givenName", "John"),
     equals("sn", "John"),
@@ -434,7 +432,7 @@ Which is equivalent to:
 
 The `oneOf` function is essentially SQL's `IN` operator. Given a field and a collection of values this returns `true` if any are `true`.
 
-```typescript
+```ts
 oneOf("givenName", "John", "Mary", "Jane")
 ```
 
@@ -445,11 +443,71 @@ Which is equivalent to:
 ```
 
 
-## Type-safe Patches
+## Type safe Patches
 
-Show how patches are also type safe
+There is also support for type safe patches. It understands which patch operations require which properties as well as what fields are available for a given object type.
+
+The following animation shows how type safe patch support works:
 
 ![](assets/animations/patch-support.gif)
+
+The type safe patches have an almost identical syntax to the `openidm` function equivalent, with the main exception that the field name is type checked.
+
+```ts
+idm.managed.role.patch(role._id, null, [
+  {
+    "operation":"replace",
+    "field":"givenName",
+    "value": "Babs"
+  }
+])
+```
+
+The same [field name limitations](#field-name-limitations) that apply to type narrowing also apply to type safe patch support. If you can't use the field name on its own, because you want to append to an array or something similar, then you can use the `uncheckedPatches` syntax:
+
+```ts
+idm.managed.role.patch(
+ role._id,
+ null,
+ {
+   uncheckedPatches: [
+    {
+      "operation":"add",
+      "field":"/members/-",
+      "value": {"_ref":"managed/user/" + user._id}
+    }
+  ]
+ }
+);
+```
+
+You can even use `checkedPatches` and `uncheckedPatches` together, like in this example:
+
+```ts
+idm.managed.role.patch(
+ role._id,
+ null,
+ {
+  checkedPatches: [
+    {
+      "operation":"replace",
+      "field":"givenName",
+      "value": "Babs"
+    }
+  ],
+  uncheckedPatches: [
+    {
+      "operation":"add",
+      "field":"/members/-",
+      "value": {"_ref":"managed/user/" + user._id}
+    }
+  ]
+ }
+)
+```
+
+
+However, you can't use the `checkedPatches` syntax on its own, it that case you need to forgo the `checkedPatches` keyword and just use the regular JSON patch array.
 
 ## Automatic type narrowing
 
@@ -501,9 +559,3 @@ Need to describe how to use the various parts of `idm-ts-types` and how to confi
     }
 }
 ```
-
-# API Wrapper Documentation
-TODO
-
-# TypeScript Code Generation Documentation
-TODO

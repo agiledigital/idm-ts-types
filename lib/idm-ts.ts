@@ -487,7 +487,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    *  role._id,
    *  null,
    *  {
-   *    checkedPatches: [{"operation":"replace", "field":"givenName", "value": "Babs"}]
+   *    checkedPatches: [{"operation":"replace", "field":"givenName", "value": "Babs"}],
    *    uncheckedPatches: [{"operation":"add", "field":"/members/-", "value": {"_ref":"managed/user/" + user._id}}]
    *  }
    * );
