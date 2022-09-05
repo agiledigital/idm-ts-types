@@ -534,6 +534,18 @@ Need to describe how to use the various parts of `idm-ts-types` and how to confi
 
 # Configuration
 
+The `gen-idm-ts-types.js` script is configured using the [node-config](https://github.com/node-config/node-config) package. It expects to find the `idmTsCodeGen` configuration context, and it supports the following values:
+
+| Key Name | Type | Default Value | Description |
+| --- | --- | --- | --- |
+| `idmTsTypesOutputFile` | `string` | none (required) | The path to the file where the Typescript types will be written. |
+| `idmProjectConfigDir` | `string` | none (required) | The path to the directory where the Managed Object's (`managed.json`) and connector files (`provisioner.openicf-*.json`) are located.
+| `useUnknownInsteadOfAny` | `boolean` | `false` | When the properties of an object are not known use `Record<string, unknown>` for `true` or `Record<string, unknown>` for `false` (the default). See [handling missing relationship types](#handling-missing-relationship-types) for some more context. |
+| `useUnknownInsteadOfAnyForManagedObj` | `boolean` | The value of `useUnknownInsteadOfAny` | Allows overriding of the `useUnknownInsteadOfAny` property specifically for Managed Objects. |
+| `useUnknownInsteadOfAnyForConnectorObj` | `boolean` | The value of `useUnknownInsteadOfAny` | Allows overriding of the `useUnknownInsteadOfAny` property specifically for Connector Objects. _Not currently implemented_. |
+
+Node-config expects to find a `config` directory relative to your `package.json` file, here are some examples taken from the [`idm-seed` project](https://github.com/agiledigital/idm-seed/tree/master/config).
+
 `config/default.json`
 ```json
 {
@@ -546,6 +558,8 @@ Need to describe how to use the various parts of `idm-ts-types` and how to confi
     }
 }
 ```
+
+It can also be configured so that you can override values via environment variables:
 
 `config/custom-environment-variables.json`
 ```json
