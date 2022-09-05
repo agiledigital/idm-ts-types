@@ -107,6 +107,9 @@ const prepareValue = (val: unknown): string => {
   }
 };
 
+/**
+ * Convert a Filter instance to a _queryFilter string that can be used in a query.
+ */
 export const interpretToFilter = <A>(dsl: Filter<A>): string => {
   switch (dsl.kind) {
     case Kind.Equals:
