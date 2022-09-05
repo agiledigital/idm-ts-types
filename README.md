@@ -112,7 +112,7 @@ Code generation supports the following scenarios:
 | Basic types | `string`, `number`/`integer`, `boolean`, `object`, `array` |
 | [Complex Objects](#complex-objects) | Objects that have defined properties, are generated as separate sub-types, and have unlimited levels of nesting, more info [below](#complex-objects). |
 | [Relationships](#relationships) | Fields that are [relationships](#relationships) simply use the target relationship as the type wrapped in a `ReferenceType`. It gracefully degrades when it can't find the target type to the `Record` type, this usually happens when referencing `internal` types which are not present in `managed.json`. |
-| Nullable fields | Fields marked as _nullable_ in the schema have add `null` as a Typescript [union type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types), eg `string \| null`. |
+| Nullable fields | Fields marked as _nullable_ in the schema have add `null` as a Typescript [union type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types), e.g. `string \| null`. |
 | Return by default fields | A managed object type is composed of two separate objects, _default_ fields and _non-default_ fields. Unless overridden in the managed object schema, basic types are _return by default_, but relationships are not _return by default_. When using [Type-safe wrapper functions](#type-safe-wrapper-functions) if fields are not specified when reading an object, the type is narrowed to the _default_ fields only.
 | Required fields | If the field is not marked as required then the typescript field name has a `?` appended, which makes it optional. |
 | Title and Description fields | The description and title fields end up as comments on the generated fields | 
@@ -307,7 +307,7 @@ export const idm = {
 };
 ```
 
-When navigating through object type, eg `user`, `role`, etc. The same core functions (`create`/`update`/`patch`/`delete`/`query`) are available, with a few key differences:
+When navigating through object type, e.g. `user`, `role`, etc. The same core functions (`create`/`update`/`patch`/`delete`/`query`) are available, with a few key differences:
 
 1. The name of the type is not required, as this is defined as part of the function call context. For example, using `openidm` reading a managed user identifier of `abc123` looks like:
       ```ts
@@ -511,11 +511,40 @@ However, you can't use the `checkedPatches` syntax on its own, it that case you 
 
 ## Automatic type narrowing
 
-Show how selecting fields can narrow the type
+The automatic type narrowing is a very useful feature as it ensures that there are no typos in the field names as well as not letting you access fields that can't possibly be in the resulting object.
+
+An example of code completion assistance can be seen in the animation below:
 
 ![](assets/animations/type-narrowing-filter.gif)
 
+This code example shows an example of using automatic type narrowing and the benefits you get from it understanding which fields you specified.
+
+```ts
+const user = idm.managed.user.read("<managedUserId>", { fields: ["givenName", "sn"] })
+if (user) {
+  user.givenName // This is fine
+  user.mail // This will throw a compile time error as the "mail" field wasn't specified in the fields
+}
+```
+
 ### Field Name Limitations
+
+Checked fields are limited to only the direct fields on the resource and do not support:
+
+* Wildcards e.g. `*` or `*_ref`
+* Navigating relationships e.g. `manager/givenName` or `reports/*/givenName`
+* Leading slashes e.g. `/givenName`
+
+If you can't use the checked version there is an "escape hatch" that turns off type checking for the field names. The main caveat then is that TypeScript no longer knows which fields you have selected, so the resulting type has all fields available both default and non-default fields. Which means you need to do your own checking whether as field actually has a value or not.
+
+This example reads a managed object using un-checked fields, which would only return the `givenName` and `manager` relationship fields, however the code completion will show other fields such as `mail` as available, even though they won't ever be in the results.
+
+```ts
+const user = idm.managed.user.read("<managedUserId>", { unCheckedFields: ["givenName", "manager/*"] })
+if (user) {
+  user.mail // Not a compile time error, but will be undefined at runtime
+}
+```
 
 ## ForgeRock API Documentation
 
@@ -527,10 +556,15 @@ The reference for the documentation has used the following URLs:
 * https://backstage.forgerock.com/docs/idm/7.2/crest/crest-query.html
 * And others...
 
-
 # Getting Started
 
-Need to describe how to use the various parts of `idm-ts-types` and how to configure it. Then point to `idm-seed` as a working example.
+The fastest way to get started would be to look at the [`idm-seed`](https://github.com/agiledigital/idm-seed) project as it has working examples that you can play with.
+
+However, if you want to integrate it into your own Node JS project then you need at least the `@agiledigital/idm-ts-types` NPM dependency as a dev dependency and some [configuration](#configuration) options specified.
+
+To make it useful you would want to use [webpack](https://github.com/webpack/webpack) which takes care of converting Typescript back to ES3 compatible JavaScript that the Rhino JavaScript engine, which IDM uses, can handle properly.
+
+There are quite a few other configuration options required to get the JavaScript to be in the right format so that commands in IDM e.g. `require("someJsFile").someFunctionInThatJsFile()`. The main files you need to configure are [tsconfig.json](https://github.com/agiledigital/idm-seed/blob/master/tsconfig.json) and [webpack.config.ts](https://github.com/agiledigital/idm-seed/blob/master/webpack.config.ts). The [`idm-seed`](https://github.com/agiledigital/idm-seed) project should get you on the right track.
 
 # Configuration
 
