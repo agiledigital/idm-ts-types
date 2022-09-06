@@ -11,6 +11,8 @@
 * Type Safety – We've put together some TypeScript types that wrap the IDM API to ensure that all your calls to the API are type safe, plus you get the added benefit of getting type-ahead assistance from your IDE.
 * Managed Object and Connector Type Generation – We've built a parser that can generate TypeScript types from your Managed Object and Connector types, this means that you can use your Managed Object or Connector types directly in TypeScript which enables IDE type-ahead assistance and type safety.
 
+![](assets/animations/wrapper-overview.gif)
+
 **Table of Contents**
 
 - [Features](#features)
@@ -112,7 +114,7 @@ Code generation supports the following scenarios:
 | Basic types | `string`, `number`/`integer`, `boolean`, `object`, `array` |
 | [Complex Objects](#complex-objects) | Objects that have defined properties, are generated as separate sub-types, and have unlimited levels of nesting, more info [below](#complex-objects). |
 | [Relationships](#relationships) | Fields that are [relationships](#relationships) simply use the target relationship as the type wrapped in a `ReferenceType`. It gracefully degrades when it can't find the target type to the `Record` type, this usually happens when referencing `internal` types which are not present in `managed.json`. |
-| Nullable fields | Fields marked as _nullable_ in the schema have add `null` as a Typescript [union type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types), e.g. `string \| null`. |
+| Nullable fields | Fields marked as _nullable_ in the schema are [unioned](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types) with `null`, e.g. `string \| null`. |
 | Return by default fields | A managed object type is composed of two separate objects, _default_ fields and _non-default_ fields. Unless overridden in the managed object schema, basic types are _return by default_, but relationships are not _return by default_. When using [Type-safe wrapper functions](#type-safe-wrapper-functions) if fields are not specified when reading an object, the type is narrowed to the _default_ fields only.
 | Required fields | If the field is not marked as required then the typescript field name has a `?` appended, which makes it optional. |
 | Title and Description fields | The description and title fields end up as comments on the generated fields | 
@@ -284,7 +286,7 @@ Additionally, when using relationships and specifying which fields should be ret
 
 ## Type-safe Wrapper Functions
 
-During code generation an addition object called `idm` is generated. The `idm` object is an extension of the built-in `openidm` object, but with wrappers added for all `managed` objects and connectors (`system`) objects.
+During code generation an additional object called `idm` is generated. The `idm` object is an extension of the built-in `openidm` object, but with wrappers added for all `managed` objects and connectors (`system`) objects.
 
 These wrapper functions are where the power of the types really shines. As seen in the animation below, VS Code is able to auto-complete managed objects and connectors, as well as showing the fields available including any description/title. 
 
