@@ -271,7 +271,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    * 
    * @example
    * Patching an object to remove an existing property:
-     * 
+   * 
    * ```ts
    * idm.managed.user.patch(
    *  user._id,
@@ -280,10 +280,10 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    *  { fields: ["userName", "givenName"] }
    * );
    * ```
-     * 
+   * 
    * @example
    * Patching an object to replace a field value:
-     * 
+   * 
    * ```ts
    * idm.managed.user.patch(
    *  user._id,
@@ -292,7 +292,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    *  { fields: ["userName", "givenName"] }
    * );
    * ```
-     * 
+   * 
    * @example
    * Patching an object to increment an integer value:
    * ```ts
@@ -386,7 +386,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    * 
    * @example
    * Patching an object to remove an existing property:
-     * 
+   * 
    * ```ts
    * idm.managed.user.patch(
    *  user._id,
@@ -395,10 +395,10 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    *  { uncheckedFields: ["*"] }
    * );
    * ```
-     * 
+   * 
    * @example
    * Patching an object to replace a field value:
-     * 
+   * 
    * ```ts
    * idm.managed.user.patch(
    *  user._id,
@@ -407,7 +407,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    *  { uncheckedFields: ["*"] }
    * );
    * ```
-     * 
+   * 
    * @example
    * Patching an object to increment an integer value:
    * ```ts
@@ -495,7 +495,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    * 
    * @example
    * Patching an object to remove an existing property:
-     * 
+   * 
    * ```ts
    * idm.managed.user.patch(
    *  user._id,
@@ -503,10 +503,10 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    *  [{"operation":"remove", "field":"marital_status", "value":"single"}]
    * );
    * ```
-     * 
+   * 
    * @example
    * Patching an object to replace a field value:
-     * 
+   * 
    * ```ts
    * idm.managed.user.patch(
    *  user._id,
@@ -514,7 +514,7 @@ export class IDMObject<T extends IDMObjectType<string>, D extends IDMObjectType<
    *  [{"operation":"replace", "field":"password", "value":"Passw0rd"}]
    * );
    * ```
-     * 
+   * 
    * @example
    * Patching an object to increment an integer value:
    * ```ts
