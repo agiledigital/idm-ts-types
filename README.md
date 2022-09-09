@@ -411,9 +411,9 @@ Which is equivalent to:
 ((/accountStatus eq "active" and /givenName eq "John") and /sn eq "Citizen")
 ```
 
-**`andOf`**
+**`anyOf`**
 
-The `andOf` function combines multiple filters returning true if any are true, i.e. it `or`'s all the filters together.
+The `anyOf` function combines multiple filters returning true if any are true, i.e. it `or`'s all the filters together.
 
 ```ts
 anyOf(
